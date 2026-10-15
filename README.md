@@ -29,6 +29,23 @@ pnpm verify
 `pnpm install` activates Husky through the `prepare` script. Before each commit,
 the pre-commit hook runs `pnpm verify`; if any check fails, the commit is blocked.
 
+## Pull requests
+
+The `PR checks` GitHub Actions workflow runs `pnpm verify` and builds all workspace
+packages for pull requests targeting `main`. Any failure fails the
+`Verify and build` status check.
+
+To block merging when checks fail, configure an active branch ruleset in
+**Settings > Rules > Rulesets** targeting `main`. Enable **Require a pull request
+before merging** and **Require status checks to pass**, and select
+**Verify and build** from GitHub Actions. Enable **Require branches to be up to
+date before merging** so checks must pass against the latest `main`. Leave the
+bypass list empty so the requirement applies to everyone.
+
+The check may need to run once before it appears in the status-check selector.
+These repository settings must be configured on GitHub; the workflow file alone
+does not prevent merging a failing pull request.
+
 ## Test
 
 Run all tests once:
