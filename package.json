@@ -1,25 +1,32 @@
 {
-  "name": "@storm/prism",
-  "version": "1.0.0",
-  "description": "",
-  "keywords": [],
-  "author": "Timothy Storm <timothystorm@gmail.com>",
-  "license": "UNLICENSED",
-  "private": true,
-  "scripts": {
-    "test": "vitest"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.11.2",
-      "onFail": "download"
-    }
-  },
-  "packageManager": "pnpm@12.11.2",
-  "type": "module",
-  "devDependencies": {
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
-  }
+	"name": "@storm/prism",
+	"version": "1.0.0",
+	"description": "",
+	"keywords": [],
+	"author": "Timothy Storm <timothystorm@gmail.com>",
+	"license": "UNLICENSED",
+	"private": true,
+	"scripts": {
+		"prepare": "husky",
+		"lint": "biome check .",
+		"test": "vitest --run",
+		"watch": "vitest --watch",
+		"typecheck": "pnpm -r --if-present typecheck",
+		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test"
+	},
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": "12.11.2",
+			"onFail": "download"
+		}
+	},
+	"packageManager": "pnpm@12.11.2",
+	"type": "module",
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.15",
+		"husky": "^9.1.7",
+		"typescript": "^6.0.3",
+		"vitest": "^5.0.3"
+	}
 }

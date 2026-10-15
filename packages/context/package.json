@@ -1,34 +1,35 @@
 {
-  "name": "@fedex/prism-context",
-  "version": "1.0.0",
-  "description": "Prism context package for state management",
-  "scripts": {
-    "compile": "pn tsc --noEmit",
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "test": "vitest"
-  },
-  "keywords": [],
-  "author": "Timothy Storm <timothystorm@gmail.com>",
-  "license": "MIT",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "dependencies": {
-    "immer": "^11.1.21",
-    "zod": "^4.6.7",
-    "zustand": "^5.0.15"
-  },
-  "devDependencies": {
-    "tsdown": "^0.23.1"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ]
+	"name": "@fedex/prism-context",
+	"version": "1.0.0",
+	"description": "Prism context package for state management",
+	"scripts": {
+		"compile": "pnpm tsc --noEmit",
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "vitest",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"keywords": [],
+	"author": "Timothy Storm <timothystorm@gmail.com>",
+	"license": "MIT",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"dependencies": {
+		"immer": "^11.1.21",
+		"zod": "^4.6.7",
+		"zustand": "^5.0.15"
+	},
+	"devDependencies": {
+		"tsdown": "^0.23.1"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	]
 }

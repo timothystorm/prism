@@ -1,4 +1,4 @@
-import {z} from "zod";
+import { z } from "zod";
 
 /**
  * Schemas and types for statistics store.
@@ -8,13 +8,10 @@ import {z} from "zod";
  * const customStatistic: Statistic = "custom:my_custom_stat"; // Custom statistic
  */
 export const BuiltInStatisticSchema = z.enum(["exceptions", "label_created"]);
-export const CustomStatisticSchema = z.templateLiteral([
-    "custom:",
-    z.string()
-]);
+export const CustomStatisticSchema = z.templateLiteral(["custom:", z.string()]);
 export const StatisticSchema = z.union([
-    BuiltInStatisticSchema,
-    CustomStatisticSchema
+	BuiltInStatisticSchema,
+	CustomStatisticSchema,
 ]);
 
 /**
@@ -27,11 +24,11 @@ export const StatisticSchema = z.union([
  * };
  */
 export const StatisticsStateSchema = z.object({
-  // The currently active statistic, which can be null.
-  activeStatistic: StatisticSchema.nullish(),
+	// The currently active statistic, which can be null.
+	activeStatistic: StatisticSchema.nullish(),
 
-  // An array of user selected statistics, which can be empty.
-  selectedStatistics: z.array(StatisticSchema)
+	// An array of user selected statistics, which can be empty.
+	selectedStatistics: z.array(StatisticSchema),
 });
 
 /**
@@ -44,6 +41,6 @@ export type StatisticsState = z.infer<typeof StatisticsStateSchema>;
  * Initial store for statistics.
  */
 export const initialStatisticsState: StatisticsState = {
-  selectedStatistics: [],
-  activeStatistic: null,
+	selectedStatistics: [],
+	activeStatistic: null,
 };

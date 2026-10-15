@@ -1,4 +1,4 @@
-import {z} from "zod";
+import { z } from "zod";
 
 /**
  * Schema for the loading store. Good for adding a loading indicator to the UI.
@@ -9,7 +9,7 @@ import {z} from "zod";
  * });
  */
 export const LoadingStateSchema = z.object({
-  loading: z.boolean().optional(),
+	loading: z.boolean().optional(),
 });
 
 /**
