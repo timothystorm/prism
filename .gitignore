@@ -1,0 +1,79 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Profiling and coverage
+*.prof
+*.pb.gz
+coverage
+*.lcov
+.nyc_output
+
+# Dependency and package-manager directories
+node_modules/
+jspm_packages/
+web_modules/
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Build and package outputs
+*.tsbuildinfo
+*.tgz
+dist
+.eslintcache
+.cache
+.parcel-cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.vscode-test
+/built
+# https://github.com/golang/go/issues/63901
+/go.work.sum
+/tsc/cmd/tsc/tsc
+/tsc/tsc
+
+# Native compiler outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.wasm
+*.test
+__debug_bin*
+*.out
+
+# Environment and editor files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.node_repl_history
+**/.vscode/*
+!**/.vscode/tasks.json
+!**/.vscode/settings.template.json
+!**/.vscode/launch.template.json
+!**/.vscode/extensions.json
+.DS_Store
+.idea
