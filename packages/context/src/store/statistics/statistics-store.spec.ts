@@ -20,6 +20,43 @@ function createStatisticsStore(
 }
 
 describe('StatisticsStore', () => {
+  describe('state', () => {
+    test('returns the current statistics state', () => {
+      const { store, actions } = createStatisticsStore();
+
+      expect(actions.state).toBe(store.getState().statistics);
+    });
+
+    test('replaces the statistics state without changing earlier snapshots or the input', () => {
+      const { store, actions } = createStatisticsStore({
+        activeStatistic: 'exceptions',
+        selectedStatistics: ['custom:one'],
+        loading: true,
+      });
+      const initial = store.getState();
+      const nextState: AppState['statistics'] = {
+        activeStatistic: 'label_created',
+        selectedStatistics: ['custom:two'],
+        loading: false,
+      };
+
+      actions.state = nextState;
+
+      expect(actions.state).toEqual(nextState);
+      expect(store.getState().statistics).toEqual(nextState);
+      expect(initial.statistics).toEqual({
+        activeStatistic: 'exceptions',
+        selectedStatistics: ['custom:one'],
+        loading: true,
+      });
+      expect(nextState).toEqual({
+        activeStatistic: 'label_created',
+        selectedStatistics: ['custom:two'],
+        loading: false,
+      });
+    });
+  });
+
   describe('loading', () => {
     test.each([
       { action: 'startLoading', initialLoading: false, expectedLoading: true },
