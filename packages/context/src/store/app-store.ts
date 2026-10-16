@@ -1,6 +1,7 @@
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "./app-state";
+import { ColumnsStore } from "./columns/columns-store";
 import { StatisticsStore } from "./statistics/statistics-store";
 
 /**
@@ -8,12 +9,18 @@ import { StatisticsStore } from "./statistics/statistics-store";
  */
 export class AppStore {
 	private readonly _statistics: StatisticsStore;
+	private readonly _columns: ColumnsStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
 
 	constructor() {
 		this._statistics = new StatisticsStore(
+			this._store.getState,
+			this._store.setState,
+		);
+
+		this._columns = new ColumnsStore(
 			this._store.getState,
 			this._store.setState,
 		);
@@ -35,6 +42,15 @@ export class AppStore {
 	 */
 	get statistics(): StatisticsStore {
 		return this._statistics;
+	}
+
+	/**
+	 * Gets the columns store, which provides methods to manipulate the columns store in the application.
+	 *
+	 * @return The columns store.
+	 */
+	get columns(): ColumnsStore {
+		return this._columns;
 	}
 
 	/**

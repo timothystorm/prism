@@ -1,6 +1,10 @@
 import { produce } from "immer";
 import type { AppState } from "../app-state";
-import type { Statistic, StatisticsState } from "./statistics-state";
+import {
+	type Statistic,
+	type StatisticsState,
+	StatisticsStateSchema,
+} from "./statistics-state";
 
 /**
  * A class that provides actions to manipulate the statistics store in the application.
@@ -27,11 +31,13 @@ export class StatisticsStore {
 	 * object. Be cautious when using this method, as it will replace the entire statistics store with the provided store.
 	 *
 	 * @param state The new statistics store to set.
+	 * @throws ZodError If the state is invalid. The store remains unchanged.
 	 */
 	set state(state: StatisticsState) {
+		const validated = StatisticsStateSchema.parse(state);
 		this.setState(
 			produce<AppState>((appState) => {
-				appState.statistics = state;
+				appState.statistics = validated;
 			}),
 		);
 	}
@@ -46,42 +52,6 @@ export class StatisticsStore {
 	}
 
 	/**
-	 * Gets the loading store of the statistics. This indicates whether a loading operation is currently in progress.
-	 *
-	 * @return True if a loading operation is in progress, false otherwise.
-	 */
-	get loading(): boolean {
-		return !!this.getState().statistics.loading;
-	}
-
-	/**
-	 * Sets the loading store of the statistics. This indicates whether a loading operation is currently in progress.
-	 *
-	 * @param loading True to indicate that a loading operation is in progress, false otherwise.
-	 */
-	set loading(loading: boolean) {
-		this.setState(
-			produce<AppState>((state) => {
-				state.statistics.loading = loading;
-			}),
-		);
-	}
-
-	/**
-	 * Sets the loading store to true, indicating that a loading operation is in progress.
-	 */
-	startLoading(): void {
-		this.loading = true;
-	}
-
-	/**
-	 * Sets the loading store to false, indicating that a loading operation has completed.
-	 */
-	stopLoading(): void {
-		this.loading = false;
-	}
-
-	/**
 	 * @return The currently active statistic, or null if none is active.
 	 */
 	get activeStatistic(): Statistic | null {
@@ -92,31 +62,30 @@ export class StatisticsStore {
 	 * Sets the currently active statistic. If the input is null, it clears the active statistic.
 	 *
 	 * @param statistic The statistic to set as active, or null to clear the active statistic.
+	 * @throws ZodError If the statistic is invalid. The store remains unchanged.
 	 */
 	set activeStatistic(statistic: Statistic | null) {
+		const validated =
+			StatisticsStateSchema.shape.activeStatistic.parse(statistic);
 		this.setState(
 			produce<AppState>((state) => {
-				state.statistics.activeStatistic = statistic;
+				state.statistics.activeStatistic = validated;
 			}),
 		);
-	}
-
-	/**
-	 * Clears the currently active statistic, setting it to null.
-	 */
-	clearActiveStatistic(): void {
-		this.activeStatistic = null;
 	}
 
 	/**
 	 * Sets the currently selected statistics.
 	 *
 	 * @param statistics The statistics to set as selected.
+	 * @throws ZodError If the selections are invalid. The store remains unchanged.
 	 */
 	set selectedStatistics(statistics: Statistic[]) {
+		const validated =
+			StatisticsStateSchema.shape.selectedStatistics.parse(statistics);
 		this.setState(
 			produce<AppState>((state) => {
-				state.statistics.selectedStatistics = [...new Set(statistics)];
+				state.statistics.selectedStatistics = [...new Set(validated)];
 			}),
 		);
 	}
@@ -125,36 +94,6 @@ export class StatisticsStore {
 	 * @return The currently selected statistics, or an empty array if none are selected.
 	 */
 	get selectedStatistics(): Statistic[] {
-		return this.getState().statistics?.selectedStatistics ?? [];
-	}
-
-	/**
-	 * Adds a statistic to the currently selected statistics.
-	 *
-	 * @param statistic The statistic to add to the selected statistics.
-	 */
-	addSelectedStatistic(statistic: Statistic): void {
-		this.setState(
-			produce<AppState>((state) => {
-				const selected = state.statistics.selectedStatistics;
-				if (!selected.includes(statistic)) selected.push(statistic);
-			}),
-		);
-	}
-
-	/**
-	 * Removes a statistic from the currently selected statistics.
-	 *
-	 * @param statistic The statistic to remove from the selected statistics.
-	 */
-	removeSelectedStatistic(statistic: Statistic): void {
-		this.setState(
-			produce<AppState>((state) => {
-				const statistics = state.statistics.selectedStatistics;
-				for (let index = statistics.length - 1; index >= 0; index--) {
-					if (statistics[index] === statistic) statistics.splice(index, 1);
-				}
-			}),
-		);
+		return this.getState().statistics?.selectedStatistics;
 	}
 }
