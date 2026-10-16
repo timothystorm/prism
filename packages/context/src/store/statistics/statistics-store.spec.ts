@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
+import type { Statistic } from "../..";
 import { type AppState, initialAppState } from "../app-state";
-import type { Statistic } from "./statistics-state";
 import { StatisticsStore } from "./statistics-store";
 
 function createStatisticsStore(
