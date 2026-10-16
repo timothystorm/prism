@@ -1,23 +1,23 @@
 import { produce } from "immer";
-import type { Statistic } from "../../schemas/statistics";
 import type { AppState } from "../app-state";
+import type { Statistic } from "./statistics-schema";
 import {
 	type StatisticsState,
 	StatisticsStateSchema,
 } from "./statistics-state";
 
 /**
- * A class that provides actions to manipulate the statistics store in the application.
+ * A class that provides actions to manipulate the statistics state in the application.
  *
- * This should only manage store and not contain any business logic. It is designed to be used with a store management
+ * This should only manage state and not contain any business logic. It is designed to be used with a state management
  * library like Zustand but should not be tied to any specific implementation - no Zustand types should be used here.
  */
 export class StatisticsStore {
 	/**
 	 * Creates an instance of StatisticsStore.
 	 *
-	 * @param getState A function that returns the current application store.
-	 * @param setState A function that updates the application store based on a provided updater function.
+	 * @param getState A function that returns the current application state.
+	 * @param setState A function that updates the application state based on a provided updater function.
 	 */
 	constructor(
 		private readonly getState: () => AppState,
@@ -27,11 +27,11 @@ export class StatisticsStore {
 	) {}
 
 	/**
-	 * Sets the statistics store in the application. Use this method to update the statistics store with a new store
-	 * object. Be cautious when using this method, as it will replace the entire statistics store with the provided store.
+	 * Sets the statistics state in the application. Use this method to update the statistics state with a new state
+	 * object. Be cautious when using this method, as it will replace the entire statistics state with the provided state.
 	 *
-	 * @param state The new statistics store to set.
-	 * @throws ZodError If the state is invalid. The store remains unchanged.
+	 * @param state The new statistics state to set.
+	 * @throws ZodError If the state is invalid. The state remains unchanged.
 	 */
 	set state(state: StatisticsState) {
 		const validated = StatisticsStateSchema.parse(state);
@@ -43,9 +43,9 @@ export class StatisticsStore {
 	}
 
 	/**
-	 * Gets the current statistics store from the application. Use this method to retrieve the current store of statistics.
+	 * Gets the current statistics state from the application. Use this method to retrieve the current state of statistics.
 	 *
-	 * @return The current statistics store.
+	 * @return The current statistics state.
 	 */
 	get state(): StatisticsState {
 		return this.getState().statistics;
@@ -62,7 +62,7 @@ export class StatisticsStore {
 	 * Sets the currently active statistic. If the input is null, it clears the active statistic.
 	 *
 	 * @param statistic The statistic to set as active, or null to clear the active statistic.
-	 * @throws ZodError If the statistic is invalid. The store remains unchanged.
+	 * @throws ZodError If the statistic is invalid. The state remains unchanged.
 	 */
 	set activeStatistic(statistic: Statistic | null) {
 		const validated =
@@ -78,7 +78,7 @@ export class StatisticsStore {
 	 * Sets the currently selected statistics.
 	 *
 	 * @param statistics The statistics to set as selected.
-	 * @throws ZodError If the selections are invalid. The store remains unchanged.
+	 * @throws ZodError If the selections are invalid. The state remains unchanged.
 	 */
 	set selectedStatistics(statistics: Statistic[]) {
 		const validated =

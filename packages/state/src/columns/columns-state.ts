@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ColumnsSchema } from "../../schemas/columns";
+import { ColumnsSchema } from "./columns-schema";
 
 /**
- * Schema for the columns store.
+ * Schema for the columns state.
  *
  * @example
  * const columnsState: ColumnsState = {
@@ -17,12 +17,12 @@ export const ColumnsStateSchema = z.object({
 });
 
 /**
- * Types for columns store.
+ * Types for columns state.
  */
 export type ColumnsState = z.infer<typeof ColumnsStateSchema>;
 
 /**
- * Initial store for columns.
+ * Initial state for columns.
  */
 export const initialColumnsState: ColumnsState = {
 	selectedColumns: [

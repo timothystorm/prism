@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Schemas and types for statistics store.
+ * Schemas and types for statistics state.
  *
  * @example
  * const statistic: Statistic = "exceptions"; // Built-in statistic
@@ -15,6 +15,6 @@ export const StatisticSchema = z.union([
 ]);
 
 /**
- * Types for statistics store.
+ * Types for statistics state.
  */
 export type Statistic = z.infer<typeof StatisticSchema>;

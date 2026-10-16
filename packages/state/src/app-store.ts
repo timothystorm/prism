@@ -5,7 +5,7 @@ import { ColumnsStore } from "./columns/columns-store";
 import { StatisticsStore } from "./statistics/statistics-store";
 
 /**
- * A store that holds the application store and provides methods to access and update it.
+ * A state that holds the application state and provides methods to access and update it.
  */
 export class AppStore {
 	private readonly _statistics: StatisticsStore;
@@ -27,10 +27,10 @@ export class AppStore {
 	}
 
 	/**
-	 * Gets the current application store. Use this method to retrieve the entire store of the application.  This is
+	 * Gets the current application state. Use this method to retrieve the entire state of the application.  This is
 	 * intended for internal use and should be used with caution, as it exposes the entire state of the application.
 	 *
-	 * @return The current application store.
+	 * @return The current application state.
 	 * @internal
 	 */
 	get _state(): AppState {
@@ -42,7 +42,7 @@ export class AppStore {
 	 * and AI agents. Use the individual stores for normal application updates.
 	 *
 	 * @param state The complete application state to set.
-	 * @throws ZodError If the state is invalid. The store remains unchanged.
+	 * @throws ZodError If the state is invalid. The state remains unchanged.
 	 * @internal
 	 */
 	set _state(state: AppState) {
@@ -51,38 +51,38 @@ export class AppStore {
 	}
 
 	/**
-	 * Gets the statistics store, which provides methods to manipulate the statistics store in the application.
+	 * Gets the statistics state, which provides methods to manipulate the statistics state in the application.
 	 *
-	 * @return The statistics store.
+	 * @return The statistics state.
 	 */
 	get statistics(): StatisticsStore {
 		return this._statistics;
 	}
 
 	/**
-	 * Gets the columns store, which provides methods to manipulate the columns store in the application.
+	 * Gets the columns state, which provides methods to manipulate the columns state in the application.
 	 *
-	 * @return The columns store.
+	 * @return The columns state.
 	 */
 	get columns(): ColumnsStore {
 		return this._columns;
 	}
 
 	/**
-	 * Subscribes to changes in the application store based on a selector function. The listener will be called whenever
+	 * Subscribes to changes in the application state based on a selector function. The listener will be called whenever
 	 * the selected value changes.
 	 *
 	 * @example
 	 * ```typescript
 	 * const unsubscribe = appStore.subscribe(
-	 *   (store) => store.statistics.activeStatistic,
+	 *   (state) => state.statistics.activeStatistic,
 	 *   (newValue, previousValue) => {
 	 *     console.log('Active statistic changed from', previousValue, 'to', newValue);
 	 *   }
 	 * );
 	 *
-	 * @param selector A function that selects a part of the application store to listen to.
-	 * @param listener A function that will be called with the new and previous values of the selected store whenever it changes.
+	 * @param selector A function that selects a part of the application state to listen to.
+	 * @param listener A function that will be called with the new and previous values of the selected state whenever it changes.
 	 */
 	subscribe<T>(
 		selector: (state: AppState) => T,

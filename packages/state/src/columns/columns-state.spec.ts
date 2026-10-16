@@ -3,7 +3,7 @@ import {
 	ColumnNameSchema,
 	ColumnSchema,
 	ColumnsSchema,
-} from "../../schemas/columns";
+} from "./columns-schema";
 import { ColumnsStateSchema, initialColumnsState } from "./columns-state";
 
 describe("ColumnNameSchema", () => {
@@ -43,7 +43,7 @@ describe("ColumnSchema", () => {
 	});
 });
 
-describe("Columns", () => {
+describe("ColumnsSchema", () => {
 	test("accepts trackId without any optional columns", () => {
 		expect(ColumnsSchema.parse([{ name: "trackId" }])).toEqual([
 			{ name: "trackId" },
@@ -105,7 +105,9 @@ describe("Columns", () => {
 			if (!result.success) {
 				expect(result.error.issues).toEqual(
 					expect.arrayContaining([
-						expect.objectContaining({ message: "Columns must be unique" }),
+						expect.objectContaining({
+							message: "Columns must be unique",
+						}),
 					]),
 				);
 			}

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 /**
- * Schemas and types for columns store.
+ * Schemas and types for columns state.
  *
  * @example
- * const columns: Columns = [
+ * const columns: ColumnsSchema = [
  *   { name: "trackId" },
  *   { name: "status", sortDirection: "asc" }
  * ];
@@ -36,9 +36,13 @@ export type Column = z.infer<typeof ColumnSchema>;
  */
 export const ColumnsSchema = z
 	.array(ColumnSchema)
+
+	// Ensure that the 'trackId' column is present in the array
 	.refine((columns) => columns.some((column) => column.name === "trackId"), {
 		error: "The 'trackId' column is required",
 	})
+
+	// Ensure that all column names are unique
 	.refine(
 		(columns) => new Set(columns.map((c) => c.name)).size === columns.length,
 		{ error: "Columns must be unique" },
