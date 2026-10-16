@@ -7,8 +7,8 @@ import { ColumnsSchema } from "./columns-schema";
  * @example
  * const columnsState: ColumnsState = {
  *   selectedColumns: [
- *     { name: "trackId" },
- *     { name: "estimatedDeliveryDate", sortDirection: "desc" }
+ *     { name: "TRACKING_ID" },
+ *     { name: "EST_DELIVERY", sortDirection: "desc" }
  *   ]
  * };
  */
@@ -26,8 +26,8 @@ export type ColumnsState = z.infer<typeof ColumnsStateSchema>;
  */
 export const initialColumnsState: ColumnsState = {
 	selectedColumns: [
-		{ name: "trackId" },
-		{ name: "status" },
-		{ name: "estimatedDeliveryDate" },
+		{ name: "TRACKING_ID" },
+		{ name: "STATUS" },
+		{ name: "EST_DELIVERY" },
 	],
 };

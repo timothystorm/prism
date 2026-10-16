@@ -5,14 +5,17 @@ import { z } from "zod";
  *
  * @example
  * const columns: ColumnsSchema = [
- *   { name: "trackId" },
- *   { name: "status", sortDirection: "asc" }
+ *   { name: "TRACKING_ID" },
+ *   { name: "STATUS", sortDirection: "asc" }
  * ];
  */
 export const ColumnNameSchema = z.enum([
-	"trackId",
-	"status",
-	"estimatedDeliveryDate",
+	"TRACKING_ID",
+	"STATUS",
+	"EST_DELIVERY",
+	"ROUTE",
+	"DELIVERY_PREDICTION",
+	"TIME_IN_NETWORK",
 ]);
 
 /**
@@ -37,10 +40,13 @@ export type Column = z.infer<typeof ColumnSchema>;
 export const ColumnsSchema = z
 	.array(ColumnSchema)
 
-	// Ensure that the 'trackId' column is present in the array
-	.refine((columns) => columns.some((column) => column.name === "trackId"), {
-		error: "The 'trackId' column is required",
-	})
+	// Ensure that the 'TRACKING_ID' column is present in the array
+	.refine(
+		(columns) => columns.some((column) => column.name === "TRACKING_ID"),
+		{
+			error: "The 'TRACKING_ID' column is required",
+		},
+	)
 
 	// Ensure that all column names are unique
 	.refine(

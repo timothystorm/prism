@@ -9,14 +9,14 @@ describe("AppStore", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 			const nextState: AppState = {
-				statistics: {
-					activeStatistic: "exceptions",
-					selectedStatistics: ["exceptions"],
+				metrics: {
+					focusedMetric: "EXCEPTION",
+					trackedMetrics: ["EXCEPTION"],
 				},
 				columns: {
 					selectedColumns: [
-						{ name: "status", sortDirection: "desc" },
-						{ name: "trackId" },
+						{ name: "STATUS", sortDirection: "desc" },
+						{ name: "TRACKING_ID" },
 					],
 				},
 			};
@@ -34,13 +34,13 @@ describe("AppStore", () => {
 			expect(updates[0]?.previousValue).toBe(initial);
 			expect(initial).toEqual(initialAppState);
 
-			nextState.statistics.selectedStatistics.push("label_created");
+			nextState.metrics.trackedMetrics.push("LABEL_CREATED");
 			nextState.columns.selectedColumns.reverse();
 
-			expect(appStore.statistics.selectedStatistics).toEqual(["exceptions"]);
+			expect(appStore.metrics.trackedMetrics).toEqual(["EXCEPTION"]);
 			expect(appStore.columns.selectedColumns).toEqual([
-				{ name: "status", sortDirection: "desc" },
-				{ name: "trackId" },
+				{ name: "STATUS", sortDirection: "desc" },
+				{ name: "TRACKING_ID" },
 			]);
 		});
 
@@ -48,28 +48,28 @@ describe("AppStore", () => {
 			const first = new AppStore();
 			const second = new AppStore();
 			const secondInitial = second._state;
-			const statistics = first.statistics;
+			const metrics = first.metrics;
 			const columns = first.columns;
 
 			first._state = {
-				statistics: {
-					activeStatistic: "exceptions",
-					selectedStatistics: ["exceptions"],
+				metrics: {
+					focusedMetric: "EXCEPTION",
+					trackedMetrics: ["EXCEPTION"],
 				},
-				columns: { selectedColumns: [{ name: "trackId" }] },
+				columns: { selectedColumns: [{ name: "TRACKING_ID" }] },
 			};
 
-			expect(first.statistics).toBe(statistics);
+			expect(first.metrics).toBe(metrics);
 			expect(first.columns).toBe(columns);
-			expect(statistics.activeStatistic).toBe("exceptions");
-			expect(columns.selectedColumns).toEqual([{ name: "trackId" }]);
+			expect(metrics.focusedMetric).toBe("EXCEPTION");
+			expect(columns.selectedColumns).toEqual([{ name: "TRACKING_ID" }]);
 
-			statistics.activeStatistic = "label_created";
-			columns.selectedColumns = [{ name: "trackId", sortDirection: "asc" }];
+			metrics.focusedMetric = "LABEL_CREATED";
+			columns.selectedColumns = [{ name: "TRACKING_ID", sortDirection: "asc" }];
 
-			expect(first._state.statistics.activeStatistic).toBe("label_created");
+			expect(first._state.metrics.focusedMetric).toBe("LABEL_CREATED");
 			expect(first._state.columns.selectedColumns).toEqual([
-				{ name: "trackId", sortDirection: "asc" },
+				{ name: "TRACKING_ID", sortDirection: "asc" },
 			]);
 			expect(second._state).toBe(secondInitial);
 			expect(second._state).toEqual(initialAppState);
@@ -79,11 +79,11 @@ describe("AppStore", () => {
 			{ state: null },
 			{ state: {} },
 			{ state: { statistics: { selectedStatistics: [] } } },
-			{ state: { columns: { selectedColumns: [{ name: "trackId" }] } } },
+			{ state: { columns: { selectedColumns: [{ name: "TRACKING_ID" }] } } },
 			{
 				state: {
-					statistics: { selectedStatistics: ["unknown"] },
-					columns: { selectedColumns: [{ name: "trackId" }] },
+					statistics: { selectedStatistics: ["UNKNOWN"] },
+					columns: { selectedColumns: [{ name: "TRACKING_ID" }] },
 				},
 			},
 			{
@@ -118,20 +118,20 @@ describe("AppStore", () => {
 			const appStore = new AppStore();
 
 			expect(appStore._state).toEqual(initialAppState);
-			expect(appStore.statistics.state).toBe(appStore._state.statistics);
+			expect(appStore.metrics.state).toBe(appStore._state.metrics);
 			expect(appStore.columns.state).toBe(appStore._state.columns);
 		});
 
-		test("exposes a stable statistics state connected to the application state", () => {
+		test("exposes a stable metrics state connected to the application state", () => {
 			const appStore = new AppStore();
-			const statistics = appStore.statistics;
+			const metrics = appStore.metrics;
 			const initial = appStore._state;
 
-			statistics.activeStatistic = "exceptions";
+			metrics.focusedMetric = "EXCEPTION";
 
-			expect(appStore.statistics).toBe(statistics);
-			expect(appStore._state.statistics.activeStatistic).toBe("exceptions");
-			expect(statistics.state).toBe(appStore._state.statistics);
+			expect(appStore.metrics).toBe(metrics);
+			expect(appStore._state.metrics.focusedMetric).toBe("EXCEPTION");
+			expect(metrics.state).toBe(appStore._state.metrics);
 			expect(appStore._state).not.toBe(initial);
 		});
 
@@ -140,7 +140,7 @@ describe("AppStore", () => {
 			const second = new AppStore();
 			const secondInitial = second._state;
 
-			first.statistics.activeStatistic = "exceptions";
+			first.metrics.focusedMetric = "EXCEPTION";
 
 			expect(second._state).toBe(secondInitial);
 			expect(second._state).toEqual(initialAppState);
@@ -153,22 +153,22 @@ describe("AppStore", () => {
 			const initial = appStore._state;
 
 			columns.selectedColumns = [
-				{ name: "status", sortDirection: "desc" },
-				{ name: "trackId" },
+				{ name: "STATUS", sortDirection: "desc" },
+				{ name: "TRACKING_ID" },
 			];
 
 			expect(appStore.columns).toBe(columns);
 			expect(appStore._state.columns.selectedColumns).toEqual([
-				{ name: "status", sortDirection: "desc" },
-				{ name: "trackId" },
+				{ name: "STATUS", sortDirection: "desc" },
+				{ name: "TRACKING_ID" },
 			]);
 			expect(columns.state).toBe(appStore._state.columns);
 			expect(appStore._state).not.toBe(initial);
-			expect(appStore._state.statistics).toBe(initial.statistics);
+			expect(appStore._state.metrics).toBe(initial.metrics);
 			expect(initial.columns.selectedColumns).toEqual([
-				{ name: "trackId" },
-				{ name: "status" },
-				{ name: "estimatedDeliveryDate" },
+				{ name: "TRACKING_ID" },
+				{ name: "STATUS" },
+				{ name: "EST_DELIVERY" },
 			]);
 		});
 
@@ -177,10 +177,10 @@ describe("AppStore", () => {
 			const second = new AppStore();
 			const secondInitial = second._state;
 
-			first.columns.selectedColumns = [{ name: "trackId" }];
+			first.columns.selectedColumns = [{ name: "TRACKING_ID" }];
 
 			expect(first._state.columns.selectedColumns).toEqual([
-				{ name: "trackId" },
+				{ name: "TRACKING_ID" },
 			]);
 			expect(second._state).toBe(secondInitial);
 			expect(second._state).toEqual(initialAppState);
@@ -202,30 +202,30 @@ describe("AppStore", () => {
 
 			expect(updates).toEqual([]);
 
-			appStore.columns.selectedColumns = [{ name: "trackId" }];
-			appStore.statistics.activeStatistic = "exceptions";
+			appStore.columns.selectedColumns = [{ name: "TRACKING_ID" }];
+			appStore.metrics.focusedMetric = "EXCEPTION";
 			appStore.columns.selectedColumns = [
-				{ name: "status", sortDirection: "asc" },
-				{ name: "trackId" },
+				{ name: "STATUS", sortDirection: "asc" },
+				{ name: "TRACKING_ID" },
 			];
 			unsubscribe();
-			appStore.columns.selectedColumns = [{ name: "trackId" }];
+			appStore.columns.selectedColumns = [{ name: "TRACKING_ID" }];
 
 			expect(updates).toEqual([
 				{
-					value: [{ name: "trackId" }],
+					value: [{ name: "TRACKING_ID" }],
 					previousValue: [
-						{ name: "trackId" },
-						{ name: "status" },
-						{ name: "estimatedDeliveryDate" },
+						{ name: "TRACKING_ID" },
+						{ name: "STATUS" },
+						{ name: "EST_DELIVERY" },
 					],
 				},
 				{
 					value: [
-						{ name: "status", sortDirection: "asc" },
-						{ name: "trackId" },
+						{ name: "STATUS", sortDirection: "asc" },
+						{ name: "TRACKING_ID" },
 					],
-					previousValue: [{ name: "trackId" }],
+					previousValue: [{ name: "TRACKING_ID" }],
 				},
 			]);
 		});
@@ -233,28 +233,28 @@ describe("AppStore", () => {
 		test("emits the selected new and previous values only when the selection changes", () => {
 			const appStore = new AppStore();
 			const updates: Array<{
-				value: AppState["statistics"]["activeStatistic"];
-				previousValue: AppState["statistics"]["activeStatistic"];
+				value: AppState["metrics"]["focusedMetric"];
+				previousValue: AppState["metrics"]["focusedMetric"];
 			}> = [];
 			appStore.subscribe(
-				(state) => state.statistics.activeStatistic,
+				(state) => state.metrics.focusedMetric,
 				(value, previousValue) => updates.push({ value, previousValue }),
 			);
 
 			expect(updates).toEqual([]);
 
-			appStore.statistics.activeStatistic = "exceptions";
-			appStore.statistics.selectedStatistics = ["exceptions"];
-			appStore.statistics.activeStatistic = "label_created";
+			appStore.metrics.focusedMetric = "EXCEPTION";
+			appStore.metrics.trackedMetrics = ["EXCEPTION"];
+			appStore.metrics.focusedMetric = "LABEL_CREATED";
 
 			expect(updates).toEqual([
 				{
-					value: "exceptions",
-					previousValue: initialAppState.statistics.activeStatistic,
+					value: "EXCEPTION",
+					previousValue: initialAppState.metrics.focusedMetric,
 				},
 				{
-					value: "label_created",
-					previousValue: "exceptions",
+					value: "LABEL_CREATED",
+					previousValue: "EXCEPTION",
 				},
 			]);
 		});
@@ -268,7 +268,7 @@ describe("AppStore", () => {
 				(value, previousValue) => updates.push({ value, previousValue }),
 			);
 
-			appStore.statistics.activeStatistic = "exceptions";
+			appStore.metrics.trackedMetrics = ["EXCEPTION"];
 
 			expect(updates).toHaveLength(1);
 			expect(updates[0]?.value).toBe(appStore._state);
@@ -277,26 +277,24 @@ describe("AppStore", () => {
 
 		test("unsubscribes a listener without disconnecting other listeners", () => {
 			const appStore = new AppStore();
-			const unsubscribedUpdates: Array<
-				AppState["statistics"]["activeStatistic"]
-			> = [];
-			const activeUpdates: Array<AppState["statistics"]["activeStatistic"]> =
+			const unsubscribedUpdates: Array<AppState["metrics"]["trackedMetrics"]> =
 				[];
+			const activeUpdates: Array<AppState["metrics"]["trackedMetrics"]> = [];
 			const unsubscribe = appStore.subscribe(
-				(state) => state.statistics.activeStatistic,
+				(state) => state.metrics.trackedMetrics,
 				(value) => unsubscribedUpdates.push(value),
 			);
 			appStore.subscribe(
-				(state) => state.statistics.activeStatistic,
+				(state) => state.metrics.trackedMetrics,
 				(value) => activeUpdates.push(value),
 			);
 
-			appStore.statistics.activeStatistic = "exceptions";
+			appStore.metrics.trackedMetrics = ["EXCEPTION"];
 			unsubscribe();
-			appStore.statistics.activeStatistic = "label_created";
+			appStore.metrics.trackedMetrics = ["LABEL_CREATED"];
 
-			expect(unsubscribedUpdates).toEqual(["exceptions"]);
-			expect(activeUpdates).toEqual(["exceptions", "label_created"]);
+			expect(unsubscribedUpdates).toEqual([["EXCEPTION"]]);
+			expect(activeUpdates).toEqual([["EXCEPTION"], ["LABEL_CREATED"]]);
 		});
 	});
 });
