@@ -1,6 +1,5 @@
 export type { AppState } from "./store/app-state";
 export { AppStore } from "./store/app-store";
-export type { LoadingState } from "./store/loading-state";
 export type {
 	Statistic,
 	StatisticsState,

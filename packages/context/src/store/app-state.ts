@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { LoadingStateSchema } from "./loading-state";
+import {
+	ColumnsStateSchema,
+	initialColumnsState,
+} from "./columns/columns-state";
 import {
 	initialStatisticsState,
 	StatisticsStateSchema,
@@ -9,8 +12,8 @@ import {
  * Schema for the entire application store.
  */
 export const AppStateSchema = z.object({
-	// The statistics store
-	statistics: StatisticsStateSchema.extend(LoadingStateSchema.shape),
+	statistics: StatisticsStateSchema,
+	columns: ColumnsStateSchema,
 });
 
 /**
@@ -23,4 +26,5 @@ export type AppState = z.infer<typeof AppStateSchema>;
  */
 export const initialAppState: AppState = {
 	statistics: initialStatisticsState,
+	columns: initialColumnsState,
 };
