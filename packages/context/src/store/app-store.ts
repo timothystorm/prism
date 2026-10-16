@@ -1,6 +1,6 @@
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
-import { type AppState, initialAppState } from "./app-state";
+import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
 import { StatisticsStore } from "./statistics/statistics-store";
 
@@ -31,9 +31,23 @@ export class AppStore {
 	 * intended for internal use and should be used with caution, as it exposes the entire state of the application.
 	 *
 	 * @return The current application store.
+	 * @internal
 	 */
 	get _state(): AppState {
 		return this._store.getState();
+	}
+
+	/**
+	 * Replaces the entire application state in a single update. Intended for internal tools such as automated tests
+	 * and AI agents. Use the individual stores for normal application updates.
+	 *
+	 * @param state The complete application state to set.
+	 * @throws ZodError If the state is invalid. The store remains unchanged.
+	 * @internal
+	 */
+	set _state(state: AppState) {
+		const validated = AppStateSchema.parse(state);
+		this._store.setState(validated, true);
 	}
 
 	/**
