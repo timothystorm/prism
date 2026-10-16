@@ -1,8 +1,118 @@
 import { describe, expect, test } from "vitest";
+import { ZodError } from "zod";
 import { type AppState, initialAppState } from "./app-state";
 import { AppStore } from "./app-store";
 
 describe("AppStore", () => {
+	describe("internal state replacement", () => {
+		test("replaces the full state atomically without changing earlier snapshots or retaining input references", () => {
+			const appStore = new AppStore();
+			const initial = appStore._state;
+			const nextState: AppState = {
+				statistics: {
+					activeStatistic: "exceptions",
+					selectedStatistics: ["exceptions"],
+				},
+				columns: {
+					selectedColumns: [
+						{ name: "status", sortDirection: "desc" },
+						{ name: "trackId" },
+					],
+				},
+			};
+			const updates: Array<{ value: AppState; previousValue: AppState }> = [];
+			appStore.subscribe(
+				(state) => state,
+				(value, previousValue) => updates.push({ value, previousValue }),
+			);
+
+			appStore._state = nextState;
+
+			expect(appStore._state).toEqual(nextState);
+			expect(updates).toHaveLength(1);
+			expect(updates[0]?.value).toBe(appStore._state);
+			expect(updates[0]?.previousValue).toBe(initial);
+			expect(initial).toEqual(initialAppState);
+
+			nextState.statistics.selectedStatistics.push("label_created");
+			nextState.columns.selectedColumns.reverse();
+
+			expect(appStore.statistics.selectedStatistics).toEqual(["exceptions"]);
+			expect(appStore.columns.selectedColumns).toEqual([
+				{ name: "status", sortDirection: "desc" },
+				{ name: "trackId" },
+			]);
+		});
+
+		test("keeps slice stores connected and other application instances unchanged after replacement", () => {
+			const first = new AppStore();
+			const second = new AppStore();
+			const secondInitial = second._state;
+			const statistics = first.statistics;
+			const columns = first.columns;
+
+			first._state = {
+				statistics: {
+					activeStatistic: "exceptions",
+					selectedStatistics: ["exceptions"],
+				},
+				columns: { selectedColumns: [{ name: "trackId" }] },
+			};
+
+			expect(first.statistics).toBe(statistics);
+			expect(first.columns).toBe(columns);
+			expect(statistics.activeStatistic).toBe("exceptions");
+			expect(columns.selectedColumns).toEqual([{ name: "trackId" }]);
+
+			statistics.activeStatistic = "label_created";
+			columns.selectedColumns = [{ name: "trackId", sortDirection: "asc" }];
+
+			expect(first._state.statistics.activeStatistic).toBe("label_created");
+			expect(first._state.columns.selectedColumns).toEqual([
+				{ name: "trackId", sortDirection: "asc" },
+			]);
+			expect(second._state).toBe(secondInitial);
+			expect(second._state).toEqual(initialAppState);
+		});
+
+		test.each([
+			{ state: null },
+			{ state: {} },
+			{ state: { statistics: { selectedStatistics: [] } } },
+			{ state: { columns: { selectedColumns: [{ name: "trackId" }] } } },
+			{
+				state: {
+					statistics: { selectedStatistics: ["unknown"] },
+					columns: { selectedColumns: [{ name: "trackId" }] },
+				},
+			},
+			{
+				state: {
+					statistics: { selectedStatistics: [] },
+					columns: { selectedColumns: [{ name: "status" }] },
+				},
+			},
+		])(
+			"rejects invalid full state without updating or notifying: $state",
+			({ state }) => {
+				const appStore = new AppStore();
+				const initial = appStore._state;
+				let notifications = 0;
+				appStore.subscribe(
+					(value) => value,
+					() => {
+						notifications += 1;
+					},
+				);
+
+				expect(() => Reflect.set(appStore, "_state", state)).toThrow(ZodError);
+
+				expect(appStore._state).toBe(initial);
+				expect(notifications).toBe(0);
+			},
+		);
+	});
+
 	describe("initialization and store integration", () => {
 		test("starts with the configured initial application store", () => {
 			const appStore = new AppStore();
