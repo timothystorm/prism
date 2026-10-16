@@ -1,11 +1,7 @@
 import { produce } from "immer";
+import { type Columns, ColumnsSchema } from "../../schemas/columns";
 import type { AppState } from "../app-state";
-import {
-	type Columns,
-	ColumnsSchema,
-	type ColumnsState,
-	ColumnsStateSchema,
-} from "./columns-state";
+import { type ColumnsState, ColumnsStateSchema } from "./columns-state";
 
 /**
  * A class that provides actions to manipulate the columns store in the application.

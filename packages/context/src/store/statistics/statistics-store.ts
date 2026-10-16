@@ -1,7 +1,7 @@
 import { produce } from "immer";
+import type { Statistic } from "../../schemas/statistics";
 import type { AppState } from "../app-state";
 import {
-	type Statistic,
 	type StatisticsState,
 	StatisticsStateSchema,
 } from "./statistics-state";

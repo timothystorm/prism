@@ -3,9 +3,8 @@ import {
 	ColumnNameSchema,
 	ColumnSchema,
 	ColumnsSchema,
-	ColumnsStateSchema,
-	initialColumnsState,
-} from "./columns-state";
+} from "../../schemas/columns";
+import { ColumnsStateSchema, initialColumnsState } from "./columns-state";
 
 describe("ColumnNameSchema", () => {
 	test.each(["trackId", "status", "estimatedDeliveryDate"])(
@@ -44,7 +43,7 @@ describe("ColumnSchema", () => {
 	});
 });
 
-describe("ColumnsSchema", () => {
+describe("Columns", () => {
 	test("accepts trackId without any optional columns", () => {
 		expect(ColumnsSchema.parse([{ name: "trackId" }])).toEqual([
 			{ name: "trackId" },
