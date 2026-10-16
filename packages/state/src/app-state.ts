@@ -9,7 +9,7 @@ import {
 } from "./statistics/statistics-state";
 
 /**
- * Schema for the entire application store.
+ * Schema for the entire application state.
  */
 export const AppStateSchema = z.object({
 	statistics: StatisticsStateSchema,
@@ -17,12 +17,12 @@ export const AppStateSchema = z.object({
 });
 
 /**
- * Types for the entire application store.
+ * Types for the entire application state.
  */
 export type AppState = z.infer<typeof AppStateSchema>;
 
 /**
- * Initial store for the entire application.
+ * Initial state for the entire application.
  */
 export const initialAppState: AppState = {
 	statistics: initialStatisticsState,

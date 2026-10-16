@@ -7,12 +7,12 @@
 	"license": "UNLICENSED",
 	"private": true,
 	"scripts": {
-		"prepare": "husky",
 		"lint": "biome check .",
+		"prepare": "husky",
 		"test": "vitest --run",
-		"watch": "vitest --watch",
 		"typecheck": "pnpm -r --if-present typecheck",
-		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test"
+		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test",
+		"watch": "vitest --watch"
 	},
 	"devEngines": {
 		"packageManager": {

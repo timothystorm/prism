@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { StatisticSchema } from "../../schemas/statistics";
+import { StatisticSchema } from "./statistics-schema";
 
 /**
- * Schema for the statistics store.
+ * Schema for the statistics state.
  *
  * @example
  * const statisticsState: StatisticsState = {
@@ -21,7 +21,7 @@ export const StatisticsStateSchema = z.object({
 export type StatisticsState = z.infer<typeof StatisticsStateSchema>;
 
 /**
- * Initial store for statistics.
+ * Initial state for statistics.
  */
 export const initialStatisticsState: StatisticsState = {
 	selectedStatistics: [],

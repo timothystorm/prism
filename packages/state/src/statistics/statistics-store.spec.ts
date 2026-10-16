@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
-import type { Statistic } from "../..";
 import { type AppState, initialAppState } from "../app-state";
+import type { Statistic } from "./statistics-schema";
 import { StatisticsStore } from "./statistics-store";
 
 function createStatisticsStore(
@@ -171,7 +171,7 @@ describe("StatisticsStore", () => {
 			expect(actions.selectedStatistics).toEqual([]);
 		});
 
-		test("notifies subscribers with the updated store when selections are assigned", () => {
+		test("notifies subscribers with the updated state when selections are assigned", () => {
 			const { store, actions } = createStatisticsStore();
 			const updates: AppState[] = [];
 			store.subscribe((state) => {

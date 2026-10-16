@@ -113,8 +113,8 @@ describe("AppStore", () => {
 		);
 	});
 
-	describe("initialization and store integration", () => {
-		test("starts with the configured initial application store", () => {
+	describe("initialization and state integration", () => {
+		test("starts with the configured initial application state", () => {
 			const appStore = new AppStore();
 
 			expect(appStore._state).toEqual(initialAppState);
@@ -122,7 +122,7 @@ describe("AppStore", () => {
 			expect(appStore.columns.state).toBe(appStore._state.columns);
 		});
 
-		test("exposes a stable statistics store connected to the application store", () => {
+		test("exposes a stable statistics state connected to the application state", () => {
 			const appStore = new AppStore();
 			const statistics = appStore.statistics;
 			const initial = appStore._state;
@@ -135,7 +135,7 @@ describe("AppStore", () => {
 			expect(appStore._state).not.toBe(initial);
 		});
 
-		test("keeps updates isolated between application-store instances", () => {
+		test("keeps updates isolated between application-state instances", () => {
 			const first = new AppStore();
 			const second = new AppStore();
 			const secondInitial = second._state;
@@ -147,7 +147,7 @@ describe("AppStore", () => {
 			expect(first._state).not.toBe(second._state);
 		});
 
-		test("exposes a stable columns store connected to the application store", () => {
+		test("exposes a stable columns state connected to the application state", () => {
 			const appStore = new AppStore();
 			const columns = appStore.columns;
 			const initial = appStore._state;
@@ -172,7 +172,7 @@ describe("AppStore", () => {
 			]);
 		});
 
-		test("keeps columns updates isolated between application-store instances", () => {
+		test("keeps columns updates isolated between application-state instances", () => {
 			const first = new AppStore();
 			const second = new AppStore();
 			const secondInitial = second._state;
@@ -259,7 +259,7 @@ describe("AppStore", () => {
 			]);
 		});
 
-		test("supports selecting and observing the entire application store", () => {
+		test("supports selecting and observing the entire application state", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 			const updates: Array<{ value: AppState; previousValue: AppState }> = [];

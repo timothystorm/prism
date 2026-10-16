@@ -3,15 +3,17 @@
 	"version": "1.0.0",
 	"description": "Prism context package for state management",
 	"scripts": {
-		"compile": "pnpm tsc --noEmit",
 		"build": "tsdown",
-		"dev": "tsdown --watch",
+		"compile": "pnpm tsc --noEmit",
+		"lint": "biome check .",
 		"test": "vitest",
-		"typecheck": "tsc --noEmit -p tsconfig.json"
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test",
+		"watch": "vitest --watch"
 	},
 	"keywords": [],
 	"author": "Timothy Storm <timothystorm@gmail.com>",
-	"license": "MIT",
+	"license": "UNLICENSED",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",

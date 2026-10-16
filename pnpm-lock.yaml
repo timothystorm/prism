@@ -179,7 +179,7 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(vite@8.3.4)
 
-  packages/context:
+  packages/state:
     dependencies:
       immer:
         specifier: ^11.1.21
