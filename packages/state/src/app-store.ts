@@ -2,20 +2,20 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
 import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
-import { StatisticsStore } from "./statistics/statistics-store";
+import { MetricsStore } from "./metrics/metrics-store";
 
 /**
  * A state that holds the application state and provides methods to access and update it.
  */
 export class AppStore {
-	private readonly _statistics: StatisticsStore;
+	private readonly _metrics: MetricsStore;
 	private readonly _columns: ColumnsStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
 
 	constructor() {
-		this._statistics = new StatisticsStore(
+		this._metrics = new MetricsStore(
 			this._store.getState,
 			this._store.setState,
 		);
@@ -51,12 +51,12 @@ export class AppStore {
 	}
 
 	/**
-	 * Gets the statistics state, which provides methods to manipulate the statistics state in the application.
+	 * Gets the metrics state, which provides methods to manipulate the metrics state in the application.
 	 *
-	 * @return The statistics state.
+	 * @return The metrics state.
 	 */
-	get statistics(): StatisticsStore {
-		return this._statistics;
+	get metrics(): MetricsStore {
+		return this._metrics;
 	}
 
 	/**
@@ -75,9 +75,9 @@ export class AppStore {
 	 * @example
 	 * ```typescript
 	 * const unsubscribe = appStore.subscribe(
-	 *   (state) => state.statistics.activeStatistic,
+	 *   (state) => state.metrics.focusedMetric,
 	 *   (newValue, previousValue) => {
-	 *     console.log('Active statistic changed from', previousValue, 'to', newValue);
+	 *     console.log('Focused metric changed from', previousValue, 'to', newValue);
 	 *   }
 	 * );
 	 *

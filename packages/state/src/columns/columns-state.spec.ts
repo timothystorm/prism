@@ -7,7 +7,7 @@ import {
 import { ColumnsStateSchema, initialColumnsState } from "./columns-state";
 
 describe("ColumnNameSchema", () => {
-	test.each(["trackId", "status", "estimatedDeliveryDate"])(
+	test.each(["TRACKING_ID", "STATUS", "EST_DELIVERY"])(
 		"accepts the column name %s",
 		(name) => {
 			expect(ColumnNameSchema.parse(name)).toBe(name);
@@ -24,19 +24,19 @@ describe("ColumnNameSchema", () => {
 
 describe("ColumnSchema", () => {
 	test.each([
-		{ name: "trackId" },
-		{ name: "status", sortDirection: "asc" },
-		{ name: "estimatedDeliveryDate", sortDirection: "desc" },
+		{ name: "TRACKING_ID" },
+		{ name: "STATUS", sortDirection: "asc" },
+		{ name: "EST_DELIVERY", sortDirection: "desc" },
 	])("accepts a column with optional sorting: %j", (column) => {
 		expect(ColumnSchema.parse(column)).toEqual(column);
 	});
 
 	test.each([
 		{},
-		{ name: "unknown" },
-		{ name: "trackId", sortDirection: "ascending" },
-		{ name: "trackId", sortDirection: null },
-		{ name: "trackId", sortDirection: 1 },
+		{ name: "UNKNOWN" },
+		{ name: "TRACKING_ID", sortDirection: "ascending" },
+		{ name: "TRACKING_ID", sortDirection: null },
+		{ name: "TRACKING_ID", sortDirection: 1 },
 		null,
 	])("rejects an invalid column: %j", (column) => {
 		expect(ColumnSchema.safeParse(column).success).toBe(false);
@@ -44,31 +44,31 @@ describe("ColumnSchema", () => {
 });
 
 describe("ColumnsSchema", () => {
-	test("accepts trackId without any optional columns", () => {
-		expect(ColumnsSchema.parse([{ name: "trackId" }])).toEqual([
-			{ name: "trackId" },
+	test("accepts TRACKING_ID without any optional columns", () => {
+		expect(ColumnsSchema.parse([{ name: "TRACKING_ID" }])).toEqual([
+			{ name: "TRACKING_ID" },
 		]);
 	});
 
-	test("preserves display order without requiring trackId to be first", () => {
+	test("preserves display order without requiring TRACKING_ID to be first", () => {
 		const columns = [
-			{ name: "estimatedDeliveryDate", sortDirection: "desc" },
-			{ name: "trackId" },
-			{ name: "status", sortDirection: "asc" },
+			{ name: "EST_DELIVERY", sortDirection: "desc" },
+			{ name: "TRACKING_ID" },
+			{ name: "STATUS", sortDirection: "asc" },
 		];
 
 		expect(ColumnsSchema.parse(columns)).toEqual([
-			{ name: "estimatedDeliveryDate", sortDirection: "desc" },
-			{ name: "trackId" },
-			{ name: "status", sortDirection: "asc" },
+			{ name: "EST_DELIVERY", sortDirection: "desc" },
+			{ name: "TRACKING_ID" },
+			{ name: "STATUS", sortDirection: "asc" },
 		]);
 	});
 
 	test.each([
 		{ columns: [] },
-		{ columns: [{ name: "status" }] },
+		{ columns: [{ name: "STATUS" }] },
 		{
-			columns: [{ name: "status" }, { name: "estimatedDeliveryDate" }],
+			columns: [{ name: "STATUS" }, { name: "EST_DELIVERY" }],
 		},
 	])("rejects selections missing trackId: $columns", ({ columns }) => {
 		const result = ColumnsSchema.safeParse(columns);
@@ -78,7 +78,7 @@ describe("ColumnsSchema", () => {
 			expect(result.error.issues).toEqual(
 				expect.arrayContaining([
 					expect.objectContaining({
-						message: "The 'trackId' column is required",
+						message: "The 'TRACKING_ID' column is required",
 					}),
 				]),
 			);
@@ -87,13 +87,13 @@ describe("ColumnsSchema", () => {
 
 	test.each([
 		{
-			columns: [{ name: "trackId" }, { name: "trackId" }],
+			columns: [{ name: "TRACKING_ID" }, { name: "TRACKING_ID" }],
 		},
 		{
 			columns: [
-				{ name: "trackId" },
-				{ name: "status", sortDirection: "asc" },
-				{ name: "status", sortDirection: "desc" },
+				{ name: "TRACKING_ID" },
+				{ name: "STATUS", sortDirection: "asc" },
+				{ name: "STATUS", sortDirection: "desc" },
 			],
 		},
 	])(
@@ -115,9 +115,9 @@ describe("ColumnsSchema", () => {
 	);
 
 	test.each([
-		{ columns: [{ name: "trackId" }, { name: "unknown" }] },
-		{ columns: [{ name: "trackId", sortDirection: "ascending" }] },
-		{ columns: { name: "trackId" } },
+		{ columns: [{ name: "TRACKING_ID" }, { name: "unknown" }] },
+		{ columns: [{ name: "TRACKING_ID", sortDirection: "ascending" }] },
+		{ columns: { name: "TRACKING_ID" } },
 		{ columns: null },
 	])("rejects malformed selections: $columns", ({ columns }) => {
 		expect(ColumnsSchema.safeParse(columns).success).toBe(false);
@@ -127,17 +127,17 @@ describe("ColumnsSchema", () => {
 describe("ColumnsStateSchema", () => {
 	test("accepts a state with only the required column", () => {
 		expect(
-			ColumnsStateSchema.parse({ selectedColumns: [{ name: "trackId" }] }),
-		).toEqual({ selectedColumns: [{ name: "trackId" }] });
+			ColumnsStateSchema.parse({ selectedColumns: [{ name: "TRACKING_ID" }] }),
+		).toEqual({ selectedColumns: [{ name: "TRACKING_ID" }] });
 	});
 
 	test.each([
 		{},
 		{ selectedColumns: null },
 		{ selectedColumns: [] },
-		{ selectedColumns: [{ name: "status" }] },
-		{ selectedColumns: [{ name: "trackId" }, { name: "trackId" }] },
-		{ selectedColumns: [{ name: "trackId", sortDirection: "invalid" }] },
+		{ selectedColumns: [{ name: "STATUS" }] },
+		{ selectedColumns: [{ name: "TRACKING_ID" }, { name: "TRACKING_ID" }] },
+		{ selectedColumns: [{ name: "TRACKING_ID", sortDirection: "invalid" }] },
 	])("rejects a missing or invalid selection: %j", (state) => {
 		expect(ColumnsStateSchema.safeParse(state).success).toBe(false);
 	});
