@@ -7,40 +7,40 @@ describe("AppStore", () => {
 		test("starts with the configured initial application store", () => {
 			const appStore = new AppStore();
 
-			expect(appStore.state).toEqual(initialAppState);
-			expect(appStore.statistics.state).toBe(appStore.state.statistics);
-			expect(appStore.columns.state).toBe(appStore.state.columns);
+			expect(appStore._state).toEqual(initialAppState);
+			expect(appStore.statistics.state).toBe(appStore._state.statistics);
+			expect(appStore.columns.state).toBe(appStore._state.columns);
 		});
 
 		test("exposes a stable statistics store connected to the application store", () => {
 			const appStore = new AppStore();
 			const statistics = appStore.statistics;
-			const initial = appStore.state;
+			const initial = appStore._state;
 
 			statistics.activeStatistic = "exceptions";
 
 			expect(appStore.statistics).toBe(statistics);
-			expect(appStore.state.statistics.activeStatistic).toBe("exceptions");
-			expect(statistics.state).toBe(appStore.state.statistics);
-			expect(appStore.state).not.toBe(initial);
+			expect(appStore._state.statistics.activeStatistic).toBe("exceptions");
+			expect(statistics.state).toBe(appStore._state.statistics);
+			expect(appStore._state).not.toBe(initial);
 		});
 
 		test("keeps updates isolated between application-store instances", () => {
 			const first = new AppStore();
 			const second = new AppStore();
-			const secondInitial = second.state;
+			const secondInitial = second._state;
 
 			first.statistics.activeStatistic = "exceptions";
 
-			expect(second.state).toBe(secondInitial);
-			expect(second.state).toEqual(initialAppState);
-			expect(first.state).not.toBe(second.state);
+			expect(second._state).toBe(secondInitial);
+			expect(second._state).toEqual(initialAppState);
+			expect(first._state).not.toBe(second._state);
 		});
 
 		test("exposes a stable columns store connected to the application store", () => {
 			const appStore = new AppStore();
 			const columns = appStore.columns;
-			const initial = appStore.state;
+			const initial = appStore._state;
 
 			columns.selectedColumns = [
 				{ name: "status", sortDirection: "desc" },
@@ -48,13 +48,13 @@ describe("AppStore", () => {
 			];
 
 			expect(appStore.columns).toBe(columns);
-			expect(appStore.state.columns.selectedColumns).toEqual([
+			expect(appStore._state.columns.selectedColumns).toEqual([
 				{ name: "status", sortDirection: "desc" },
 				{ name: "trackId" },
 			]);
-			expect(columns.state).toBe(appStore.state.columns);
-			expect(appStore.state).not.toBe(initial);
-			expect(appStore.state.statistics).toBe(initial.statistics);
+			expect(columns.state).toBe(appStore._state.columns);
+			expect(appStore._state).not.toBe(initial);
+			expect(appStore._state.statistics).toBe(initial.statistics);
 			expect(initial.columns.selectedColumns).toEqual([
 				{ name: "trackId" },
 				{ name: "status" },
@@ -65,16 +65,16 @@ describe("AppStore", () => {
 		test("keeps columns updates isolated between application-store instances", () => {
 			const first = new AppStore();
 			const second = new AppStore();
-			const secondInitial = second.state;
+			const secondInitial = second._state;
 
 			first.columns.selectedColumns = [{ name: "trackId" }];
 
-			expect(first.state.columns.selectedColumns).toEqual([
+			expect(first._state.columns.selectedColumns).toEqual([
 				{ name: "trackId" },
 			]);
-			expect(second.state).toBe(secondInitial);
-			expect(second.state).toEqual(initialAppState);
-			expect(first.state.columns).not.toBe(second.state.columns);
+			expect(second._state).toBe(secondInitial);
+			expect(second._state).toEqual(initialAppState);
+			expect(first._state.columns).not.toBe(second._state.columns);
 		});
 	});
 
@@ -151,7 +151,7 @@ describe("AppStore", () => {
 
 		test("supports selecting and observing the entire application store", () => {
 			const appStore = new AppStore();
-			const initial = appStore.state;
+			const initial = appStore._state;
 			const updates: Array<{ value: AppState; previousValue: AppState }> = [];
 			appStore.subscribe(
 				(state) => state,
@@ -161,7 +161,7 @@ describe("AppStore", () => {
 			appStore.statistics.activeStatistic = "exceptions";
 
 			expect(updates).toHaveLength(1);
-			expect(updates[0]?.value).toBe(appStore.state);
+			expect(updates[0]?.value).toBe(appStore._state);
 			expect(updates[0]?.previousValue).toBe(initial);
 		});
 

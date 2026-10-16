@@ -27,11 +27,12 @@ export class AppStore {
 	}
 
 	/**
-	 * Gets the current application store. Use this method to retrieve the entire store of the application.
+	 * Gets the current application store. Use this method to retrieve the entire store of the application.  This is
+	 * intended for internal use and should be used with caution, as it exposes the entire state of the application.
 	 *
 	 * @return The current application store.
 	 */
-	get state(): AppState {
+	get _state(): AppState {
 		return this._store.getState();
 	}
 
