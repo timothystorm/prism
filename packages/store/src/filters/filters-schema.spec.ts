@@ -23,54 +23,55 @@ const stringArrayTypes = [
 ] as const;
 
 describe("FilterSchema", () => {
-	test.each(dateTypes)("converts date-only input for %s", (type) => {
-		expect(
-			FilterSchema.parse({
-				type,
-				criteria: {
-					start: "2026-10-17",
-					end: "2026-10-18",
-					timeZone: "America/Chicago",
-				},
-			}),
-		).toEqual({
+	test.each(dateTypes)("preserves supplied UTC timestamps for %s", (type) => {
+		const filter = {
 			type,
 			criteria: {
-				start: new Date("2026-10-17T05:00:00.000Z"),
-				end: new Date("2026-10-19T04:59:59.999Z"),
+				start: "2026-10-17T16:05:02.359Z",
+				end: "2026-10-22T09:30:45.012Z",
 			},
-		});
+		};
+
+		expect(FilterSchema.parse(filter)).toEqual(filter);
 	});
 
 	test.each(dateTypes)("rejects reversed dates for %s", (type) => {
 		expect(
 			FilterSchema.safeParse({
 				type,
-				criteria: { start: "2026-10-18", end: "2026-10-17", timeZone: "UTC" },
+				criteria: {
+					start: "2026-10-18T00:00:00.000Z",
+					end: "2026-10-17T23:59:59.999Z",
+				},
 			}).success,
 		).toBe(false);
 	});
 
 	test.each(dateTypes)(
-		"accepts and copies normalized Date criteria for %s",
+		"rejects date-only strings, offsets, and Date objects for %s",
 		(type) => {
-			const start = new Date("2026-10-17T00:00:00.000Z");
-			const end = new Date("2026-10-18T23:59:59.999Z");
-			const parsed = FilterSchema.parse({ type, criteria: { start, end } });
-			start.setUTCFullYear(2000);
-			end.setUTCFullYear(2000);
-
-			expect(parsed).toEqual({
-				type,
-				criteria: {
+			for (const criteria of [
+				{
+					start: "2026-10-17",
+					end: "2026-10-18",
+				},
+				{
+					start: "2026-10-17T00:00:00.000-06:00",
+					end: "2026-10-18T23:59:59.999-06:00",
+				},
+				{
 					start: new Date("2026-10-17T00:00:00.000Z"),
 					end: new Date("2026-10-18T23:59:59.999Z"),
 				},
-			});
+			]) {
+				expect(FilterSchema.safeParse({ type, criteria }).success).toBe(false);
+			}
 		},
 	);
 
 	test.each([
+		{ start: "2026-10-17", end: "2026-10-18" },
+		{ start: "2026-10-18T00:00:00.000Z", end: "2026-10-17T23:59:59.999Z" },
 		{ start: new Date("invalid"), end: new Date("2026-10-17T23:59:59.999Z") },
 		{ start: new Date("2026-10-17T00:00:00.000Z"), end: new Date("invalid") },
 		{
@@ -78,7 +79,7 @@ describe("FilterSchema", () => {
 			end: new Date("2026-10-17T23:59:59.999Z"),
 		},
 		{ start: new Date("2026-10-17T00:00:00.000Z"), end: "2026-10-18" },
-	])("rejects invalid normalized Date criteria %j", (criteria) => {
+	])("rejects invalid stored date criteria %j", (criteria) => {
 		expect(
 			FilterSchema.safeParse({ type: "SHIPMENT:COMMIT_DATE", criteria })
 				.success,

@@ -13,7 +13,8 @@ export class FilterStore extends BaseStore<"filters"> {
 	/**
 	 * Adds a filter or replaces its criteria in place without changing the dirty flag.
 	 * Equivalent parsed criteria leave state and subscriptions unchanged.
-	 * Date criteria accept date-only strings for conversion or already-normalized Dates.
+	 * Date criteria are UTC ISO strings, stored without conversion or normalization.
+	 * Controllers are responsible for timezone conversion and day-boundary rules.
 	 */
 	addActiveFilter(filter: z.input<typeof FilterSchema>): Filter[] {
 		const validated = FilterSchema.parse(filter);
