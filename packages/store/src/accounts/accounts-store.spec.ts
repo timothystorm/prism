@@ -2,29 +2,27 @@ import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
-import { AccountStateSchema, initialAccountState } from "./account-state";
-import { AccountStore } from "./account-store";
+import { AccountsStateSchema, initialAccountsState } from "./accounts-state";
+import { AccountsStore } from "./accounts-store";
 
 function createAccountStore() {
 	const store = createStore<AppState>(() => ({ ...initialAppState }));
-	const actions = new AccountStore(store.getState, store.setState);
+	const actions = new AccountsStore(store.getState, store.setState);
 	return { store, actions };
 }
 
-describe("AccountStore", () => {
+describe("AccountsStore", () => {
 	test("starts with no active accounts and a clean state", () => {
 		const { actions } = createAccountStore();
 
-		expect(actions.state).toEqual({ activeAccounts: [], dirty: false });
-		expect(AccountStateSchema.parse(initialAccountState)).toEqual(
-			initialAccountState,
+		expect(actions.state).toEqual({ active: [], dirty: false });
+		expect(AccountsStateSchema.parse(initialAccountsState)).toEqual(
+			initialAccountsState,
 		);
-		expect(AccountStateSchema.parse({ activeAccounts: ["account-1"] })).toEqual(
-			{
-				activeAccounts: ["account-1"],
-				dirty: false,
-			},
-		);
+		expect(AccountsStateSchema.parse({ active: ["accounts-1"] })).toEqual({
+			active: ["accounts-1"],
+			dirty: false,
+		});
 	});
 
 	test.each(["state", "activeAccounts"] as const)(
@@ -32,19 +30,23 @@ describe("AccountStore", () => {
 		(property) => {
 			const { store, actions } = createAccountStore();
 			const initial = store.getState();
-			const activeAccounts = ["account-1", "account-2"];
+			const activeAccounts = ["accounts-1", "accounts-2"];
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
 			if (property === "state") {
-				actions.state = { activeAccounts, dirty: true };
+				actions.state = { active: activeAccounts, dirty: true };
 			} else {
 				actions.activeAccounts = activeAccounts;
 			}
 
 			expect(actions.state).toBe(store.getState().account);
-			expect(actions.activeAccounts).toEqual(["account-1", "account-2"]);
-			expect(initial.account).toEqual(initialAccountState);
+			expect(store.getState().account.active).toEqual([
+				"accounts-1",
+				"accounts-2",
+			]);
+			expect(actions.activeAccounts).toEqual(["accounts-1", "accounts-2"]);
+			expect(initial.account).toEqual(initialAccountsState);
 			for (const key of [
 				"metrics",
 				"columns",
@@ -54,8 +56,8 @@ describe("AccountStore", () => {
 				expect(store.getState()[key]).toBe(initial[key]);
 			}
 			expect(updates).toHaveLength(1);
-			activeAccounts.push("account-3");
-			expect(actions.activeAccounts).toEqual(["account-1", "account-2"]);
+			activeAccounts.push("accounts-3");
+			expect(actions.activeAccounts).toEqual(["accounts-1", "accounts-2"]);
 		},
 	);
 
@@ -63,15 +65,15 @@ describe("AccountStore", () => {
 		"selects one or multiple accounts and clears selections while preserving dirty=%s",
 		(dirty) => {
 			const { actions } = createAccountStore();
-			actions.state = { activeAccounts: [], dirty };
+			actions.state = { active: [], dirty };
 
 			for (const activeAccounts of [
-				["account-1"],
-				["account-1", "account-2"],
+				["accounts-1"],
+				["accounts-1", "accounts-2"],
 				[],
 			]) {
 				actions.activeAccounts = activeAccounts;
-				expect(actions.state).toEqual({ activeAccounts, dirty });
+				expect(actions.state).toEqual({ active: activeAccounts, dirty });
 			}
 		},
 	);
@@ -79,9 +81,15 @@ describe("AccountStore", () => {
 	describe.each(["state", "activeAccounts"] as const)(
 		"%s validation",
 		(property) => {
-			test.each([null, "account-1", [1], [""], ["account-1", "account-1"]])(
-				"rejects invalid selections %j without updating or notifying",
-				(activeAccounts) => {
+			test.each([
+				{ active: null },
+				{ active: "accounts-1" },
+				{ active: [1] },
+				{ active: [""] },
+				{ active: ["accounts-1", "accounts-1"] },
+			])(
+				"rejects invalid selections $active without updating or notifying",
+				({ active }) => {
 					const { store, actions } = createAccountStore();
 					const initial = store.getState();
 					const updates: AppState[] = [];
@@ -91,9 +99,7 @@ describe("AccountStore", () => {
 						Reflect.set(
 							actions,
 							property,
-							property === "state"
-								? { activeAccounts, dirty: false }
-								: activeAccounts,
+							property === "state" ? { active, dirty: false } : active,
 						),
 					).toThrow(ZodError);
 					expect(store.getState()).toBe(initial);

@@ -1,5 +1,8 @@
-export { type AccountState, AccountStateSchema } from "./account/account-state";
-export { AccountStore } from "./account/account-store";
+export {
+	type AccountsState,
+	AccountsStateSchema,
+} from "./accounts/accounts-state";
+export { AccountsStore } from "./accounts/accounts-store";
 export { type AppState, AppStateSchema } from "./app-state";
 export { AppStore } from "./app-store";
 export { BaseStore } from "./base-store";

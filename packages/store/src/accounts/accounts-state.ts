@@ -5,8 +5,8 @@ import { z } from "zod";
  * An empty array represents no selections. The full list of accessible accounts is not stored here.
  * Controllers manage the dirty flag.
  */
-export const AccountStateSchema = z.object({
-	activeAccounts: z
+export const AccountsStateSchema = z.object({
+	active: z
 		.array(z.string().min(1))
 		.refine((accounts) => new Set(accounts).size === accounts.length, {
 			message: "Accounts must be unique",
@@ -14,10 +14,10 @@ export const AccountStateSchema = z.object({
 	dirty: z.boolean().default(false),
 });
 
-export type AccountState = z.infer<typeof AccountStateSchema>;
+export type AccountsState = z.infer<typeof AccountsStateSchema>;
 
-/** Initial account selection state. */
-export const initialAccountState: AccountState = {
-	activeAccounts: [],
+/** Initial accounts selection state. */
+export const initialAccountsState: AccountsState = {
+	active: [],
 	dirty: false,
 };
