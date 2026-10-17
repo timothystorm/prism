@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FilterDateRangeSchema } from "../common/date-schema";
+import { DateRangeSchema } from "../common/date-schema";
 import { LocationCriterionSchema } from "../common/location-schema";
 import { TimeRangeSchema } from "../common/time-schema";
 
@@ -11,93 +11,97 @@ import { TimeRangeSchema } from "../common/time-schema";
 export const FilterSchema = z.discriminatedUnion("type", [
 	/**
 	 * @example
-	 * // will use the browser's timezone to convert the date to UTC
 	 * {
 	 *   "type": "SHIPMENT:COMMIT_DATE",
 	 *   "criteria": {
-	 *     "start": "2023-01-01",
-	 *     "end": "2023-01-31"
+	 *     "start": "2023-01-01T00:00:00.000Z",
+	 *     "end": "2023-01-31T23:59:59.999Z"
 	 *   }
 	 * }
 	 */
 	z
 		.object({
 			type: z.literal("SHIPMENT:COMMIT_DATE"),
-			criteria: FilterDateRangeSchema,
+			criteria: DateRangeSchema,
 		})
 		.describe("Commitment date range for the shipment in UTC time zone"),
 
 	/**
 	 * @example
-	 * // will use the browser's timezone to convert the date to UTC
 	 * {
 	 *   "type": "SHIPMENT:DELIVERED_DATE",
 	 *   "criteria": {
-	 *     "start": "2023-01-01",
-	 *     "end": "2023-01-31"
+	 *     "start": "2023-01-01T00:00:00.000Z",
+	 *     "end": "2023-01-31T23:59:59.999Z"
 	 *   }
 	 * }
 	 */
 	z
 		.object({
 			type: z.literal("SHIPMENT:DELIVERED_DATE"),
-			criteria: FilterDateRangeSchema,
+			criteria: DateRangeSchema,
 		})
 		.describe("Delivery date range for the shipment in UTC time zone"),
 
 	/**
 	 * @example
-	 * // will use the browser's timezone to convert the date to UTC
 	 * {
 	 *   "type": "SHIPMENT:EST_DELIVERY_DATE",
 	 *   "criteria": {
-	 *     "start": "2023-01-01",
-	 *     "end": "2023-01-31"
+	 *     "start": "2023-01-01T00:00:00.000Z",
+	 *     "end": "2023-01-31T23:59:59.999Z"
 	 *   }
 	 * }
 	 */
 	z
 		.object({
 			type: z.literal("SHIPMENT:EST_DELIVERY_DATE"),
-			criteria: FilterDateRangeSchema,
+			criteria: DateRangeSchema,
 		})
 		.describe(
 			"Estimated delivery date range for the shipment in UTC time zone",
 		),
 
+	z
+		.object({
+			type: z.literal("SHIPMENT:EST_DELIVERY_TIME"),
+			criteria: TimeRangeSchema,
+		})
+		.describe(
+			"Estimated delivery time range for the shipment in 24 hour clock time - ex. 08:00 to 17:00",
+		),
+
 	/**
 	 * @example
-	 * // will use the browser's timezone to convert the date to UTC
 	 * {
 	 *   "type": "SHIPMENT:SHIP_DATE",
 	 *   "criteria": {
-	 *     "start": "2023-01-01",
-	 *     "end": "2023-01-31"
+	 *     "start": "2023-01-01T00:00:00.000Z",
+	 *     "end": "2023-01-31T23:59:59.999Z"
 	 *   }
 	 * }
 	 */
 	z
 		.object({
 			type: z.literal("SHIPMENT:SHIP_DATE"),
-			criteria: FilterDateRangeSchema,
+			criteria: DateRangeSchema,
 		})
 		.describe("Ship date range for the shipment in UTC time zone"),
 
 	/**
 	 * @example
-	 * // will use the browser's timezone to convert the date to UTC
 	 * {
 	 *   "type": "SHIPMENT:TENDERED_DATE",
 	 *   "criteria": {
-	 *     "start": "2023-01-01",
-	 *     "end": "2023-01-31"
+	 *     "start": "2023-01-01T00:00:00.000Z",
+	 *     "end": "2023-01-31T23:59:59.999Z"
 	 *   }
 	 * }
 	 */
 	z
 		.object({
 			type: z.literal("SHIPMENT:TENDERED_DATE"),
-			criteria: FilterDateRangeSchema,
+			criteria: DateRangeSchema,
 		})
 		.describe("Tendered date range for the shipment in UTC time zone"),
 

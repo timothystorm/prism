@@ -5,26 +5,25 @@ import { AppStore } from "./app-store";
 
 describe("AppStore", () => {
 	describe("internal state replacement", () => {
-		test("restores a snapshot containing a converted date filter", () => {
+		test("restores a JSON snapshot without changing supplied date strings", () => {
 			const source = new AppStore();
 			source.filters.addActiveFilter({
 				type: "SHIPMENT:COMMIT_DATE",
 				criteria: {
-					start: "2026-10-17",
-					end: "2026-10-17",
-					timeZone: "UTC",
+					start: "2026-10-17T16:05:02.359Z",
+					end: "2026-10-17T17:30:45.012Z",
 				},
 			});
 			const target = new AppStore();
 
-			target._state = source._state;
+			target._state = JSON.parse(JSON.stringify(source._state));
 
 			expect(target.filters.state.active).toEqual([
 				{
 					type: "SHIPMENT:COMMIT_DATE",
 					criteria: {
-						start: new Date("2026-10-17T00:00:00.000Z"),
-						end: new Date("2026-10-17T23:59:59.999Z"),
+						start: "2026-10-17T16:05:02.359Z",
+						end: "2026-10-17T17:30:45.012Z",
 					},
 				},
 			]);

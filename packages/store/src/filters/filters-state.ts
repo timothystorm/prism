@@ -10,15 +10,15 @@ import { FilterSchema } from "./filters-schema";
  *     {
  *       type: "SHIPMENT:COMMIT_DATE",
  *       criteria: {
- *         start: "2023-01-01",
- *         end: "2023-01-31"
+ *         start: "2023-01-01T00:00:00.000Z",
+ *         end: "2023-01-31T23:59:59.999Z"
  *       }
  *     },
  *     {
  *       type: "SHIPMENT:DELIVERED_DATE",
  *       criteria: {
- *         start: "2023-02-01",
- *         end: "2023-02-28"
+ *         start: "2023-02-01T00:00:00.000Z",
+ *         end: "2023-02-28T23:59:59.999Z"
  *       }
  *     },
  *     {

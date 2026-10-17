@@ -15,15 +15,14 @@ function createFilterStore(active: Filter[] = [], dirty = false) {
 }
 
 describe("FilterStore.state", () => {
-	test("replaces and clears filters without retaining caller-owned dates or selections", () => {
+	test("replaces and clears filters without retaining caller-owned criteria or selections", () => {
 		const { store, actions } = createFilterStore();
 		const initial = store.getState();
 		const filter = FilterSchema.parse({
 			type: "SHIPMENT:COMMIT_DATE",
 			criteria: {
-				start: "2026-10-17",
-				end: "2026-10-17",
-				timeZone: "UTC",
+				start: "2026-10-17T00:00:00.000Z",
+				end: "2026-10-17T23:59:59.999Z",
 			},
 		});
 		const active = [filter];
@@ -33,8 +32,8 @@ describe("FilterStore.state", () => {
 		actions.state = { active, dirty: true };
 		active.length = 0;
 		if (filter.type === "SHIPMENT:COMMIT_DATE") {
-			filter.criteria.start.setUTCFullYear(2000);
-			filter.criteria.end.setUTCFullYear(2000);
+			filter.criteria.start = "2000-10-17T00:00:00.000Z";
+			filter.criteria.end = "2000-10-17T23:59:59.999Z";
 		}
 
 		expect(actions.state).toEqual({
@@ -42,8 +41,8 @@ describe("FilterStore.state", () => {
 				{
 					type: "SHIPMENT:COMMIT_DATE",
 					criteria: {
-						start: new Date("2026-10-17T00:00:00.000Z"),
-						end: new Date("2026-10-17T23:59:59.999Z"),
+						start: "2026-10-17T00:00:00.000Z",
+						end: "2026-10-17T23:59:59.999Z",
 					},
 				},
 			],
@@ -119,8 +118,8 @@ describe.each([false, true])(
 						{
 							type: "SHIPMENT:COMMIT_DATE",
 							criteria: {
-								start: new Date("2026-10-17T00:00:00.000Z"),
-								end: new Date("2026-10-17T23:59:59.999Z"),
+								start: "2026-10-17T00:00:00.000Z",
+								end: "2026-10-17T23:59:59.999Z",
 							},
 						},
 						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
@@ -266,9 +265,8 @@ describe("FilterStore.addActiveFilter", () => {
 		{
 			type: "SHIPMENT:COMMIT_DATE",
 			criteria: {
-				start: "2026-10-17",
-				end: "2026-10-18",
-				timeZone: "UTC",
+				start: "2026-10-17T16:05:02.359Z",
+				end: "2026-10-18T09:30:45.012Z",
 			},
 		},
 		{ type: "SHIPMENT:SIGNATURE_AVAILABLE" },
@@ -327,17 +325,25 @@ describe("FilterStore.addActiveFilter", () => {
 		},
 	);
 
-	test("compares date values and preserves stored dates when adding another filter", () => {
+	test("preserves supplied date strings when adding and replacing filters", () => {
 		const { store, actions } = createFilterStore();
 		actions.addActiveFilter({
 			type: "SHIPMENT:COMMIT_DATE",
 			criteria: {
-				start: "2026-10-17",
-				end: "2026-10-17",
-				timeZone: "UTC",
+				start: "2026-10-17T16:05:02.359Z",
+				end: "2026-10-17T17:30:45.012Z",
 			},
 		});
 		const initial = store.getState();
+		expect(actions.state.active).toEqual([
+			{
+				type: "SHIPMENT:COMMIT_DATE",
+				criteria: {
+					start: "2026-10-17T16:05:02.359Z",
+					end: "2026-10-17T17:30:45.012Z",
+				},
+			},
+		]);
 
 		actions.addActiveFilter({
 			type: "SHIPMENT:INVOICE_NUMBER",
@@ -348,17 +354,16 @@ describe("FilterStore.addActiveFilter", () => {
 		actions.addActiveFilter({
 			type: "SHIPMENT:COMMIT_DATE",
 			criteria: {
-				start: "2026-10-18",
-				end: "2026-10-18",
-				timeZone: "UTC",
+				start: "2026-10-18T11:15:00.123Z",
+				end: "2026-10-18T12:45:00.456Z",
 			},
 		});
 		expect(actions.state.active).toEqual([
 			{
 				type: "SHIPMENT:COMMIT_DATE",
 				criteria: {
-					start: new Date("2026-10-18T00:00:00.000Z"),
-					end: new Date("2026-10-18T23:59:59.999Z"),
+					start: "2026-10-18T11:15:00.123Z",
+					end: "2026-10-18T12:45:00.456Z",
 				},
 			},
 			{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
@@ -370,6 +375,27 @@ describe("FilterStore.addActiveFilter", () => {
 		{ type: "UNKNOWN", criteria: true },
 		{ type: "SHIPMENT:INVOICE_NUMBER", criteria: [] },
 		{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "UNKNOWN" },
+		{
+			type: "SHIPMENT:COMMIT_DATE",
+			criteria: {
+				start: "2026-10-17",
+				end: "2026-10-18",
+			},
+		},
+		{
+			type: "SHIPMENT:COMMIT_DATE",
+			criteria: {
+				start: "2026-10-17T00:00:00.000-06:00",
+				end: "2026-10-18T23:59:59.999-06:00",
+			},
+		},
+		{
+			type: "SHIPMENT:COMMIT_DATE",
+			criteria: {
+				start: new Date("2026-10-17T00:00:00.000Z"),
+				end: new Date("2026-10-18T23:59:59.999Z"),
+			},
+		},
 	])(
 		"rejects invalid input %j without changing state or notifying",
 		(filter) => {
