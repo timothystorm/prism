@@ -3,6 +3,7 @@ import { createStore } from "zustand/vanilla";
 import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
 import { MetricsStore } from "./metrics/metrics-store";
+import { StatusesStore } from "./statuses/statuses-store";
 
 /**
  * A state that holds the application state and provides methods to access and update it.
@@ -10,6 +11,7 @@ import { MetricsStore } from "./metrics/metrics-store";
 export class AppStore {
 	private readonly _metrics: MetricsStore;
 	private readonly _columns: ColumnsStore;
+	private readonly _statuses: StatusesStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
@@ -21,6 +23,11 @@ export class AppStore {
 		);
 
 		this._columns = new ColumnsStore(
+			this._store.getState,
+			this._store.setState,
+		);
+
+		this._statuses = new StatusesStore(
 			this._store.getState,
 			this._store.setState,
 		);
@@ -51,21 +58,30 @@ export class AppStore {
 	}
 
 	/**
-	 * Gets the metrics state, which provides methods to manipulate the metrics state in the application.
+	 * Gets the metrics store, which provides methods to manipulate the metrics state in the application.
 	 *
-	 * @return The metrics state.
+	 * @return The metrics store.
 	 */
 	get metrics(): MetricsStore {
 		return this._metrics;
 	}
 
 	/**
-	 * Gets the columns state, which provides methods to manipulate the columns state in the application.
+	 * Gets the columns store, which provides methods to manipulate the columns state in the application.
 	 *
-	 * @return The columns state.
+	 * @return The columns store.
 	 */
 	get columns(): ColumnsStore {
 		return this._columns;
+	}
+
+	/**
+	 * Gets the statuses store, which provides methods to manipulate the statuses state in the application.
+	 *
+	 * @return The statuses store.
+	 */
+	get statuses(): StatusesStore {
+		return this._statuses;
 	}
 
 	/**

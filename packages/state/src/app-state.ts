@@ -7,6 +7,10 @@ import {
 	initialMetricsState,
 	MetricsStateSchema,
 } from "./metrics/metrics-state";
+import {
+	initialStatusesState,
+	StatusesStateSchema,
+} from "./statuses/statuses-state";
 
 /**
  * Schema for the entire application state.
@@ -14,6 +18,7 @@ import {
 export const AppStateSchema = z.object({
 	metrics: MetricsStateSchema,
 	columns: ColumnsStateSchema,
+	statuses: StatusesStateSchema,
 });
 
 /**
@@ -27,4 +32,5 @@ export type AppState = z.infer<typeof AppStateSchema>;
 export const initialAppState: AppState = {
 	metrics: initialMetricsState,
 	columns: initialColumnsState,
+	statuses: initialStatusesState,
 };
