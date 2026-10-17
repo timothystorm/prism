@@ -1,6 +1,8 @@
 import { produce } from "immer";
 import type { AppState } from "../app-state";
-import { type StatusesState, StatusesStateSchema } from "./statuses-state";
+import { BaseStore } from "../base-store";
+import { type Status, StatusSchema } from "./statuses-schema";
+import { StatusesStateSchema } from "./statuses-state";
 
 /**
  * A class that provides actions to manipulate the statuses state in the application.
@@ -8,49 +10,30 @@ import { type StatusesState, StatusesStateSchema } from "./statuses-state";
  * This should only manage state and not contain any business logic. It is designed to be used with a state management
  * library like Zustand but should not be tied to any specific implementation - no Zustand types should be used here.
  */
-export class StatusesStore {
-	/**
-	 * Creates an instance of StatusesStore.
-	 *
-	 * @param getState A function that returns the current application state.
-	 * @param setState A function that updates the application state based on a provided updater function.
-	 */
-	constructor(
-		private readonly getState: () => AppState,
-		private readonly setState: (
-			updater: (state: AppState) => Partial<AppState>,
-		) => void,
-	) {}
+export class StatusesStore extends BaseStore<"statuses"> {
+	protected readonly sliceKey = "statuses";
+	protected readonly stateSchema = StatusesStateSchema;
 
 	/**
-	 * Gets the current statuses state from the application.
-	 *
-	 * @return The current statuses state.
+	 * Appends a valid status unless already selected, without changing the dirty flag.
+	 * Duplicate additions leave state and subscriptions unchanged.
 	 */
-	get state(): StatusesState {
-		return this.getState().statuses;
-	}
-
-	/**
-	 * Replaces the entire statuses state with the provided state.
-	 *
-	 * @param state The new statuses state to set.
-	 * @throws ZodError If the state is invalid. The state remains unchanged.
-	 */
-	set state(state: StatusesState) {
-		const validated = StatusesStateSchema.parse(state);
+	addSelectedStatus(status: string): Status[] {
+		const validated = StatusSchema.parse(status);
 		this.setState(
-			produce<AppState>((appState) => {
-				appState.statuses = validated;
+			produce<AppState>((state) => {
+				if (state.statuses.selectedStatuses.includes(validated)) return;
+				state.statuses.selectedStatuses.push(validated);
 			}),
 		);
+		return this.state.selectedStatuses;
 	}
 
 	/**
 	 * @return The currently selected parent and child status identifiers, or an empty array if none are selected.
 	 */
 	get selectedStatuses(): string[] {
-		return this.getState().statuses?.selectedStatuses ?? [];
+		return this.state?.selectedStatuses ?? [];
 	}
 
 	/**
@@ -64,8 +47,8 @@ export class StatusesStore {
 		const validated =
 			StatusesStateSchema.shape.selectedStatuses.parse(statuses);
 		this.setState(
-			produce<AppState>((appState) => {
-				appState.statuses.selectedStatuses = validated;
+			produce<AppState>((state) => {
+				state.statuses.selectedStatuses = validated;
 			}),
 		);
 	}

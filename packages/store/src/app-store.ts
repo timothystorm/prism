@@ -2,6 +2,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
 import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
+import { FilterStore } from "./filters/filter-store";
 import { MetricsStore } from "./metrics/metrics-store";
 import { StatusesStore } from "./statuses/statuses-store";
 
@@ -12,6 +13,7 @@ export class AppStore {
 	private readonly _metrics: MetricsStore;
 	private readonly _columns: ColumnsStore;
 	private readonly _statuses: StatusesStore;
+	private readonly _filters: FilterStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
@@ -31,6 +33,8 @@ export class AppStore {
 			this._store.getState,
 			this._store.setState,
 		);
+
+		this._filters = new FilterStore(this._store.getState, this._store.setState);
 	}
 
 	/**
@@ -82,6 +86,10 @@ export class AppStore {
 	 */
 	get statuses(): StatusesStore {
 		return this._statuses;
+	}
+
+	get filters(): FilterStore {
+		return this._filters;
 	}
 
 	/**

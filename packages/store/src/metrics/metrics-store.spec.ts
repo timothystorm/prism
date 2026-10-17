@@ -151,6 +151,9 @@ describe("MetricsStore", () => {
 					trackedMetrics: ["CUSTOM:TWO"],
 				});
 				expect(initial.metrics.focusedMetric).toBeNull();
+				expect(store.getState().metrics.trackedMetrics).toBe(
+					initial.metrics.trackedMetrics,
+				);
 			},
 		);
 
@@ -163,6 +166,20 @@ describe("MetricsStore", () => {
 
 			expect(actions.focusedMetric).toBeNull();
 			expect(selected.metrics.focusedMetric).toBe("EXCEPTION");
+		});
+
+		test("does not notify or replace state when focus is unchanged", () => {
+			const { store, actions } = createMetricsStore();
+			const initial = store.getState();
+			let notifications = 0;
+			store.subscribe(() => {
+				notifications += 1;
+			});
+
+			actions.focusedMetric = null;
+
+			expect(store.getState()).toBe(initial);
+			expect(notifications).toBe(0);
 		});
 	});
 
