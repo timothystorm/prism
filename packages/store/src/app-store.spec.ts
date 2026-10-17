@@ -34,6 +34,7 @@ describe("AppStore", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 			const nextState: AppState = {
+				account: { activeAccounts: ["account-1"], dirty: true },
 				filters: initialAppState.filters,
 				metrics: {
 					focusedMetric: "EXCEPTION",
@@ -67,7 +68,12 @@ describe("AppStore", () => {
 			nextState.metrics.trackedMetrics.push("LABEL_CREATED");
 			nextState.columns.selectedColumns.reverse();
 			nextState.statuses.selectedStatuses.push("DELIVERED");
+			nextState.account.activeAccounts.push("account-2");
 
+			expect(appStore.account.state).toEqual({
+				activeAccounts: ["account-1"],
+				dirty: true,
+			});
 			expect(appStore.metrics.trackedMetrics).toEqual(["EXCEPTION"]);
 			expect(appStore.columns.selectedColumns).toEqual([
 				{ name: "STATUS", sortDirection: "desc" },
@@ -88,8 +94,10 @@ describe("AppStore", () => {
 			const columns = first.columns;
 			const statuses = first.statuses;
 			const filters = first.filters;
+			const account = first.account;
 
 			first._state = {
+				account: { activeAccounts: ["account-1"], dirty: false },
 				filters: initialAppState.filters,
 				metrics: {
 					focusedMetric: "EXCEPTION",
@@ -106,6 +114,8 @@ describe("AppStore", () => {
 			expect(first.columns).toBe(columns);
 			expect(first.statuses).toBe(statuses);
 			expect(first.filters).toBe(filters);
+			expect(first.account).toBe(account);
+			expect(account.activeAccounts).toEqual(["account-1"]);
 			expect(statuses.selectedStatuses).toEqual(["EXCEPTION:DAMAGED_PACKAGE"]);
 			expect(metrics.focusedMetric).toBe("EXCEPTION");
 			expect(columns.selectedColumns).toEqual([{ name: "TRACKING_ID" }]);
@@ -113,12 +123,14 @@ describe("AppStore", () => {
 			metrics.focusedMetric = "LABEL_CREATED";
 			columns.selectedColumns = [{ name: "TRACKING_ID", sortDirection: "asc" }];
 			statuses.selectedStatuses = ["DELIVERED"];
+			account.activeAccounts = ["account-2"];
 			filters.addActiveFilter({
 				type: "SHIPMENT:DELIVERY_PREDICTION",
 				criteria: "DELAYED",
 			});
 
 			expect(first._state.metrics.focusedMetric).toBe("LABEL_CREATED");
+			expect(first._state.account.activeAccounts).toEqual(["account-2"]);
 			expect(first._state.columns.selectedColumns).toEqual([
 				{ name: "TRACKING_ID", sortDirection: "asc" },
 			]);
@@ -131,6 +143,12 @@ describe("AppStore", () => {
 		});
 
 		test.each([
+			{
+				state: {
+					...initialAppState,
+					account: { activeAccounts: ["account-1", "account-1"] },
+				},
+			},
 			{ state: null },
 			{ state: {} },
 			{ state: { statistics: { selectedStatistics: [] } } },
@@ -212,11 +230,35 @@ describe("AppStore", () => {
 			const appStore = new AppStore();
 
 			expect(appStore._state).toEqual(initialAppState);
+			expect(appStore.account.state).toBe(appStore._state.account);
+			expect(appStore.account.activeAccounts).toEqual([]);
 			expect(appStore.metrics.state).toBe(appStore._state.metrics);
 			expect(appStore.columns.state).toBe(appStore._state.columns);
 			expect(appStore.statuses.state).toBe(appStore._state.statuses);
 			expect(appStore.statuses.selectedStatuses).toEqual([]);
 			expect(appStore.statuses.state.dirty).toBe(false);
+		});
+
+		test("notifies active-account subscribers only for account selections and supports unsubscribe", () => {
+			const appStore = new AppStore();
+			const updates: string[][] = [];
+			const previous: string[][] = [];
+			const unsubscribe = appStore.subscribe(
+				(state) => state.account.activeAccounts,
+				(value, previousValue) => {
+					updates.push(value);
+					previous.push(previousValue);
+				},
+			);
+
+			appStore.account.activeAccounts = ["account-1", "account-2"];
+			appStore.metrics.focusedMetric = "EXCEPTION";
+			appStore.account.activeAccounts = [];
+			unsubscribe();
+			appStore.account.activeAccounts = ["account-3"];
+
+			expect(updates).toEqual([["account-1", "account-2"], []]);
+			expect(previous).toEqual([[], ["account-1", "account-2"]]);
 		});
 
 		test("exposes a stable statuses store connected to application state without changing other slices or snapshots", () => {

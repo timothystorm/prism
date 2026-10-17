@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+	AccountStateSchema,
+	initialAccountState,
+} from "./account/account-state";
+import {
 	ColumnsStateSchema,
 	initialColumnsState,
 } from "./columns/columns-state";
@@ -20,6 +24,7 @@ import {
  * Schema for the entire application state.
  */
 export const AppStateSchema = z.object({
+	account: AccountStateSchema,
 	metrics: MetricsStateSchema,
 	columns: ColumnsStateSchema,
 	statuses: StatusesStateSchema,
@@ -35,6 +40,7 @@ export type AppState = z.infer<typeof AppStateSchema>;
  * Initial state for the entire application.
  */
 export const initialAppState: AppState = {
+	account: initialAccountState,
 	metrics: initialMetricsState,
 	columns: initialColumnsState,
 	statuses: initialStatusesState,

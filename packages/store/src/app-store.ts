@@ -1,5 +1,6 @@
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
+import { AccountStore } from "./account/account-store";
 import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
 import { FilterStore } from "./filters/filter-store";
@@ -10,6 +11,7 @@ import { StatusesStore } from "./statuses/statuses-store";
  * A state that holds the application state and provides methods to access and update it.
  */
 export class AppStore {
+	private readonly _account: AccountStore;
 	private readonly _metrics: MetricsStore;
 	private readonly _columns: ColumnsStore;
 	private readonly _statuses: StatusesStore;
@@ -19,6 +21,10 @@ export class AppStore {
 	);
 
 	constructor() {
+		this._account = new AccountStore(
+			this._store.getState,
+			this._store.setState,
+		);
 		this._metrics = new MetricsStore(
 			this._store.getState,
 			this._store.setState,
@@ -86,6 +92,11 @@ export class AppStore {
 	 */
 	get statuses(): StatusesStore {
 		return this._statuses;
+	}
+
+	/** @return The store of account identifiers currently in focus. */
+	get account(): AccountStore {
+		return this._account;
 	}
 
 	get filters(): FilterStore {
