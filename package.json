@@ -11,6 +11,7 @@
 		"lint-fix": "biome check --write .",
 		"prepare": "husky",
 		"test": "vitest --run",
+		"test:coverage": "vitest run --coverage",
 		"typecheck": "pnpm -r --if-present typecheck",
 		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test",
 		"watch": "vitest --watch"
@@ -26,6 +27,7 @@
 	"type": "module",
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.15",
+		"@vitest/coverage-v8": "5.0.3",
 		"husky": "^9.1.7",
 		"typescript": "^6.0.3",
 		"vitest": "^5.0.3"

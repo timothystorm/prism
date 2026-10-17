@@ -1,5 +1,6 @@
 export { type AppState, AppStateSchema } from "./app-state";
 export { AppStore } from "./app-store";
+export { BaseStore } from "./base-store";
 export type {
 	Column,
 	ColumnNameSchema,

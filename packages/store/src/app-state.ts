@@ -4,6 +4,10 @@ import {
 	initialColumnsState,
 } from "./columns/columns-state";
 import {
+	FilterStateSchema,
+	initialFiltersState,
+} from "./filters/filters-state";
+import {
 	initialMetricsState,
 	MetricsStateSchema,
 } from "./metrics/metrics-state";
@@ -19,6 +23,7 @@ export const AppStateSchema = z.object({
 	metrics: MetricsStateSchema,
 	columns: ColumnsStateSchema,
 	statuses: StatusesStateSchema,
+	filters: FilterStateSchema,
 });
 
 /**
@@ -33,4 +38,5 @@ export const initialAppState: AppState = {
 	metrics: initialMetricsState,
 	columns: initialColumnsState,
 	statuses: initialStatusesState,
+	filters: initialFiltersState,
 };

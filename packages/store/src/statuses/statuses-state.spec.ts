@@ -6,6 +6,7 @@ describe("StatusesStateSchema", () => {
 	test("allows no selections as an empty array", () => {
 		expect(StatusesStateSchema.parse({ selectedStatuses: [] })).toEqual({
 			selectedStatuses: [],
+			dirty: false,
 		});
 	});
 
@@ -35,7 +36,10 @@ describe("StatusesStateSchema", () => {
 	])(
 		"preserves independent selections without expansion or collapse: %j",
 		(state) => {
-			expect(StatusesStateSchema.parse(state)).toEqual(state);
+			expect(StatusesStateSchema.parse(state)).toEqual({
+				...state,
+				dirty: false,
+			});
 		},
 	);
 
@@ -47,8 +51,48 @@ describe("StatusesStateSchema", () => {
 			],
 		};
 
-		expect(StatusesStateSchema.parse(state)).toEqual(state);
+		expect(StatusesStateSchema.parse(state)).toEqual({
+			...state,
+			dirty: false,
+		});
 	});
+
+	test.each([true, false])(
+		"preserves explicitly supplied dirty=%s",
+		(dirty) => {
+			const state = { selectedStatuses: ["LABEL_CREATED"], dirty };
+			expect(StatusesStateSchema.parse(state)).toEqual(state);
+		},
+	);
+
+	test("defaults undefined dirty to false without modifying input", () => {
+		const state = { selectedStatuses: ["LABEL_CREATED"], dirty: undefined };
+
+		expect(StatusesStateSchema.parse(state)).toEqual({
+			selectedStatuses: ["LABEL_CREATED"],
+			dirty: false,
+		});
+		expect(state.dirty).toBeUndefined();
+	});
+
+	test.each([null, "true", "false", 0, 1, {}, []])(
+		"rejects non-boolean dirty values: %j",
+		(dirty) => {
+			const result = StatusesStateSchema.safeParse({
+				selectedStatuses: [],
+				dirty,
+			});
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error.issues).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({ path: ["dirty"] }),
+					]),
+				);
+			}
+		},
+	);
 
 	test.each([
 		{},
@@ -64,6 +108,7 @@ describe("StatusesStateSchema", () => {
 	test("starts with no statuses selected", () => {
 		expect(StatusesStateSchema.parse(initialStatusesState)).toEqual({
 			selectedStatuses: [],
+			dirty: false,
 		});
 	});
 });

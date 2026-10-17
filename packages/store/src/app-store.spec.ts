@@ -5,10 +5,36 @@ import { AppStore } from "./app-store";
 
 describe("AppStore", () => {
 	describe("internal state replacement", () => {
+		test("restores a snapshot containing a converted date filter", () => {
+			const source = new AppStore();
+			source.filters.addActiveFilter({
+				type: "SHIPMENT:COMMIT_DATE",
+				criteria: {
+					start: "2026-10-17",
+					end: "2026-10-17",
+					timeZone: "UTC",
+				},
+			});
+			const target = new AppStore();
+
+			target._state = source._state;
+
+			expect(target.filters.state.active).toEqual([
+				{
+					type: "SHIPMENT:COMMIT_DATE",
+					criteria: {
+						start: new Date("2026-10-17T00:00:00.000Z"),
+						end: new Date("2026-10-17T23:59:59.999Z"),
+					},
+				},
+			]);
+		});
+
 		test("replaces the full state atomically without changing earlier snapshots or retaining input references", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 			const nextState: AppState = {
+				filters: initialAppState.filters,
 				metrics: {
 					focusedMetric: "EXCEPTION",
 					trackedMetrics: ["EXCEPTION"],
@@ -21,6 +47,7 @@ describe("AppStore", () => {
 				},
 				statuses: {
 					selectedStatuses: ["LABEL_CREATED", "EXCEPTION:DAMAGED_PACKAGE"],
+					dirty: true,
 				},
 			};
 			const updates: Array<{ value: AppState; previousValue: AppState }> = [];
@@ -50,6 +77,7 @@ describe("AppStore", () => {
 				"LABEL_CREATED",
 				"EXCEPTION:DAMAGED_PACKAGE",
 			]);
+			expect(appStore.statuses.state.dirty).toBe(true);
 		});
 
 		test("keeps slice stores connected and other application instances unchanged after replacement", () => {
@@ -59,8 +87,10 @@ describe("AppStore", () => {
 			const metrics = first.metrics;
 			const columns = first.columns;
 			const statuses = first.statuses;
+			const filters = first.filters;
 
 			first._state = {
+				filters: initialAppState.filters,
 				metrics: {
 					focusedMetric: "EXCEPTION",
 					trackedMetrics: ["EXCEPTION"],
@@ -68,12 +98,14 @@ describe("AppStore", () => {
 				columns: { selectedColumns: [{ name: "TRACKING_ID" }] },
 				statuses: {
 					selectedStatuses: ["EXCEPTION:DAMAGED_PACKAGE"],
+					dirty: false,
 				},
 			};
 
 			expect(first.metrics).toBe(metrics);
 			expect(first.columns).toBe(columns);
 			expect(first.statuses).toBe(statuses);
+			expect(first.filters).toBe(filters);
 			expect(statuses.selectedStatuses).toEqual(["EXCEPTION:DAMAGED_PACKAGE"]);
 			expect(metrics.focusedMetric).toBe("EXCEPTION");
 			expect(columns.selectedColumns).toEqual([{ name: "TRACKING_ID" }]);
@@ -81,12 +113,19 @@ describe("AppStore", () => {
 			metrics.focusedMetric = "LABEL_CREATED";
 			columns.selectedColumns = [{ name: "TRACKING_ID", sortDirection: "asc" }];
 			statuses.selectedStatuses = ["DELIVERED"];
+			filters.addActiveFilter({
+				type: "SHIPMENT:DELIVERY_PREDICTION",
+				criteria: "DELAYED",
+			});
 
 			expect(first._state.metrics.focusedMetric).toBe("LABEL_CREATED");
 			expect(first._state.columns.selectedColumns).toEqual([
 				{ name: "TRACKING_ID", sortDirection: "asc" },
 			]);
 			expect(first._state.statuses.selectedStatuses).toEqual(["DELIVERED"]);
+			expect(first._state.filters.active).toEqual([
+				{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "DELAYED" },
+			]);
 			expect(second._state).toBe(secondInitial);
 			expect(second._state).toEqual(initialAppState);
 		});
@@ -106,6 +145,27 @@ describe("AppStore", () => {
 				state: {
 					...initialAppState,
 					statuses: { selectedStatuses: ["UNKNOWN"] },
+				},
+			},
+			{
+				state: {
+					...initialAppState,
+					filters: {
+						active: [{ type: "SHIPMENT:INVOICE_NUMBER", criteria: [] }],
+						dirty: false,
+					},
+				},
+			},
+			{
+				state: {
+					...initialAppState,
+					filters: {
+						active: [
+							{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
+							{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-2"] },
+						],
+						dirty: true,
+					},
 				},
 			},
 			{
@@ -156,6 +216,7 @@ describe("AppStore", () => {
 			expect(appStore.columns.state).toBe(appStore._state.columns);
 			expect(appStore.statuses.state).toBe(appStore._state.statuses);
 			expect(appStore.statuses.selectedStatuses).toEqual([]);
+			expect(appStore.statuses.state.dirty).toBe(false);
 		});
 
 		test("exposes a stable statuses store connected to application state without changing other slices or snapshots", () => {
@@ -258,6 +319,57 @@ describe("AppStore", () => {
 	});
 
 	describe("subscriptions", () => {
+		test("observes filter changes but not duplicate additions, missing removals, or other slices", () => {
+			const first = new AppStore();
+			const second = new AppStore();
+			const initial = first._state;
+			const filters = first.filters;
+			const updates: Array<{
+				value: AppState["filters"]["active"];
+				previousValue: AppState["filters"]["active"];
+			}> = [];
+			const unsubscribe = first.subscribe(
+				(state) => state.filters.active,
+				(value, previousValue) => updates.push({ value, previousValue }),
+			);
+
+			filters.addActiveFilter({
+				type: "SHIPMENT:DELIVERY_PREDICTION",
+				criteria: "ON_TIME",
+			});
+			filters.addActiveFilter({
+				type: "SHIPMENT:DELIVERY_PREDICTION",
+				criteria: "ON_TIME",
+			});
+			filters.removeActiveFilter("SHIPMENT:INVOICE_NUMBER");
+			first.metrics.focusedMetric = "EXCEPTION";
+			filters.removeActiveFilter("SHIPMENT:DELIVERY_PREDICTION");
+			unsubscribe();
+			filters.addActiveFilter({
+				type: "SHIPMENT:SIGNATURE_AVAILABLE",
+				criteria: true,
+			});
+
+			expect(updates).toEqual([
+				{
+					value: [
+						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
+					],
+					previousValue: [],
+				},
+				{
+					value: [],
+					previousValue: [
+						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
+					],
+				},
+			]);
+			expect(first.filters).toBe(filters);
+			expect(initial.filters).toEqual({ active: [], dirty: false });
+			expect(second.filters.state).toBe(second._state.filters);
+			expect(second.filters.state).toEqual({ active: [], dirty: false });
+		});
+
 		test("emits new and previous status selections only for status updates until unsubscribed", () => {
 			const appStore = new AppStore();
 			const updates: Array<{

@@ -9,22 +9,24 @@ import { StatusSchema } from "./statuses-schema";
  * const statusesState: StatusesState = {
  *   selectedStatuses: [
  *     "LABEL_CREATED",
- *     "EXCEPTION:DAMAGED_PACKAGE"
- *   ]
+ *     "EXCEPTION", 									// include parent status - explicitly
+ *     "EXCEPTION:DAMAGED_PACKAGE"    // include children of parent status - explicitly
+ *   ],
+ *   dirty: true
  * };
  */
 export const StatusesStateSchema = z.object({
-	selectedStatuses: z.array(StatusSchema),
+	selectedStatuses: z
+		.array(StatusSchema)
+		.refine((statuses) => new Set(statuses).size === statuses.length, {
+			message: "Statuses must be unique",
+		}),
+	dirty: z.boolean().default(false),
 });
 
-/**
- * Types for statuses state.
- */
 export type StatusesState = z.infer<typeof StatusesStateSchema>;
 
-/**
- * Initial state for statuses.
- */
 export const initialStatusesState: StatusesState = {
 	selectedStatuses: [],
+	dirty: false,
 };
