@@ -22,6 +22,39 @@ function createMetricsStore(
 
 describe("MetricsStore", () => {
 	describe("validation", () => {
+		test.each(["state", "trackedMetrics"] as const)(
+			"rejects duplicate metrics through %s without changing state, input, or notifying subscribers",
+			(property) => {
+				for (const input of [
+					["EXCEPTION", "EXCEPTION"],
+					["CUSTOM:ONE", "LABEL_CREATED", "CUSTOM:ONE"],
+				]) {
+					const { store, actions } = createMetricsStore({
+						focusedMetric: "LABEL_CREATED",
+						trackedMetrics: ["LABEL_CREATED"],
+					});
+					const initial = store.getState();
+					const originalInput = [...input];
+					let notifications = 0;
+					store.subscribe(() => {
+						notifications += 1;
+					});
+					const value =
+						property === "state"
+							? { focusedMetric: "EXCEPTION", trackedMetrics: input }
+							: input;
+
+					expect(() => Reflect.set(actions, property, value)).toThrow(ZodError);
+
+					expect(store.getState()).toBe(initial);
+					expect(actions.focusedMetric).toBe("LABEL_CREATED");
+					expect(actions.trackedMetrics).toEqual(["LABEL_CREATED"]);
+					expect(input).toEqual(originalInput);
+					expect(notifications).toBe(0);
+				}
+			},
+		);
+
 		test.each([
 			{
 				property: "state",
@@ -134,31 +167,21 @@ describe("MetricsStore", () => {
 	});
 
 	describe("tracked metrics", () => {
-		test("replaces selections with unique metrics in first-occurrence order", () => {
+		test("replaces selections with unique metrics in the supplied order", () => {
 			const { store, actions } = createMetricsStore();
 			actions.focusedMetric = "LABEL_CREATED";
 			actions.trackedMetrics = ["LABEL_CREATED"];
 			const initial = store.getState();
-			const input: MetricType[] = [
-				"CUSTOM:ONE",
-				"EXCEPTION",
-				"CUSTOM:ONE",
-				"EXCEPTION",
-			];
+			const input: MetricType[] = ["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"];
 
 			actions.trackedMetrics = input;
 
 			expect(store.getState().metrics).toEqual({
 				focusedMetric: "LABEL_CREATED",
-				trackedMetrics: ["CUSTOM:ONE", "EXCEPTION"],
+				trackedMetrics: ["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"],
 			});
 			expect(initial.metrics.trackedMetrics).toEqual(["LABEL_CREATED"]);
-			expect(input).toEqual([
-				"CUSTOM:ONE",
-				"EXCEPTION",
-				"CUSTOM:ONE",
-				"EXCEPTION",
-			]);
+			expect(input).toEqual(["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"]);
 			expect(actions.trackedMetrics).not.toBe(input);
 		});
 

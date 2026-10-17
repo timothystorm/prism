@@ -15,7 +15,11 @@ export const MetricsStateSchema = z.object({
 	focusedMetric: MetricTypeSchema.nullish(),
 
 	// The list of selected metrics, which can be empty.
-	trackedMetrics: z.array(MetricTypeSchema),
+	trackedMetrics: z
+		.array(MetricTypeSchema)
+		.refine((metrics) => new Set(metrics).size === metrics.length, {
+			message: "Tracked metrics must be unique",
+		}),
 });
 
 export type MetricsState = z.infer<typeof MetricsStateSchema>;
