@@ -28,3 +28,6 @@ export {
 	type StatusesState,
 	StatusesStateSchema,
 } from "./statuses/statuses-state";
+export { DEFAULT_VIEW_ID, type View, ViewSchema } from "./views/views-schema";
+export { type ViewsState, ViewsStateSchema } from "./views/views-state";
+export { ViewsStore } from "./views/views-store";

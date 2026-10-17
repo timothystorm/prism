@@ -6,6 +6,7 @@ import { ColumnsStore } from "./columns/columns-store";
 import { FilterStore } from "./filters/filter-store";
 import { MetricsStore } from "./metrics/metrics-store";
 import { StatusesStore } from "./statuses/statuses-store";
+import { ViewsStore } from "./views/views-store";
 
 /**
  * A state that holds the application state and provides methods to access and update it.
@@ -16,6 +17,7 @@ export class AppStore {
 	private readonly _columns: ColumnsStore;
 	private readonly _statuses: StatusesStore;
 	private readonly _filters: FilterStore;
+	private readonly _views: ViewsStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
@@ -41,6 +43,7 @@ export class AppStore {
 		);
 
 		this._filters = new FilterStore(this._store.getState, this._store.setState);
+		this._views = new ViewsStore(this._store.getState, this._store.setState);
 	}
 
 	/**
@@ -101,6 +104,13 @@ export class AppStore {
 
 	get filters(): FilterStore {
 		return this._filters;
+	}
+
+	/**
+	 * @return The store of view metadata and current and default view identifiers.
+	 */
+	get views(): ViewsStore {
+		return this._views;
 	}
 
 	/**

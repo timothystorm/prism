@@ -33,6 +33,7 @@ describe("AppStore", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 			const nextState: AppState = {
+				views: initialAppState.views,
 				account: { active: ["accounts-1"], dirty: true },
 				filters: initialAppState.filters,
 				metrics: {
@@ -96,6 +97,7 @@ describe("AppStore", () => {
 			const account = first.account;
 
 			first._state = {
+				views: initialAppState.views,
 				account: { active: ["accounts-1"], dirty: false },
 				filters: initialAppState.filters,
 				metrics: {
@@ -225,6 +227,54 @@ describe("AppStore", () => {
 	});
 
 	describe("initialization and state integration", () => {
+		test("integrates views with subscriptions, snapshots, and isolated instances", () => {
+			const first = new AppStore();
+			const second = new AppStore();
+			const views = first.views;
+			const initial = first._state;
+			const updates: string[] = [];
+			const unsubscribe = first.subscribe(
+				(state) => state.views.current,
+				(value) => updates.push(value),
+			);
+
+			views.created = [{ id: "view-1", name: "My view" }];
+			views.current = "view-1";
+			views.default = "view-1";
+			first.metrics.focusedMetric = "EXCEPTION";
+			unsubscribe();
+			views.current = "default";
+
+			expect(updates).toEqual(["view-1"]);
+			expect(initial.views).toEqual(initialAppState.views);
+			expect(second.views.state).toEqual(initialAppState.views);
+			expect(first.views.state).toBe(first._state.views);
+
+			first._state = JSON.parse(JSON.stringify(first._state));
+			expect(first.views).toBe(views);
+			expect(first.views.state).toEqual({
+				created: [{ id: "view-1", name: "My view" }],
+				current: "default",
+				default: "view-1",
+				dirty: false,
+			});
+			views.current = "view-1";
+			expect(first._state.views.current).toBe("view-1");
+		});
+
+		test("rejects snapshots with unavailable view identifiers", () => {
+			const appStore = new AppStore();
+			const initial = appStore._state;
+
+			expect(() => {
+				appStore._state = {
+					...initial,
+					views: { ...initial.views, default: "missing" },
+				};
+			}).toThrow(ZodError);
+			expect(appStore._state).toBe(initial);
+		});
+
 		test("starts with the configured initial application state", () => {
 			const appStore = new AppStore();
 
