@@ -26,7 +26,7 @@ const TimeZoneSchema = z.string().refine(
  * The start date must be at or before the end date. The time zone defaults to the user's local time zone at parse time.
  * The range includes the start day's midnight through the final day's last millisecond, accounting for DST changes.
  *
- * DO NOT USE offset-based time zones (e.g., "UTC+2") as they do not account for daylight saving time changes! Use
+ * DO NOT USE offset-based time zones (e.g., "UTC+2") as they do not accounts for daylight saving time changes! Use
  * IANA time zone names (e.g., "America/New_York") instead.
  *
  * @example
