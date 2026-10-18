@@ -2,11 +2,10 @@ import { describe, expect, test } from "vitest";
 import { initialViewsState, ViewsStateSchema } from "./views-state";
 
 describe("ViewsStateSchema", () => {
-	test("starts with no created views and the built-in default selected", () => {
+	test("starts with no custom views and the built-in default selected", () => {
 		expect(initialViewsState).toEqual({
-			created: [],
+			custom: [],
 			current: "default",
-			default: "default",
 			dirty: false,
 		});
 		expect(ViewsStateSchema.parse(initialViewsState)).toEqual(
@@ -16,33 +15,42 @@ describe("ViewsStateSchema", () => {
 
 	test("preserves view order, permits duplicate names, and defaults dirty to false", () => {
 		const input = {
-			created: [
+			custom: [
 				{ id: "view-2", name: "My view" },
 				{ id: "view-1", name: "My view" },
 			],
 			current: "view-1",
-			default: "view-2",
 		};
 		expect(ViewsStateSchema.parse(input)).toEqual({ ...input, dirty: false });
 	});
 
+	test("accepts a custom view with the built-in identifier", () => {
+		const input = {
+			custom: [{ id: "default", name: "My default" }],
+			current: "default",
+			dirty: true,
+		};
+		expect(ViewsStateSchema.parse(input)).toEqual(input);
+	});
+
+	test("accepts a current identifier outside the custom views", () => {
+		const input = { custom: [], current: "missing", dirty: false };
+		expect(ViewsStateSchema.parse(input)).toEqual(input);
+	});
+
 	test.each([
-		{ created: null },
-		{ created: [{ id: "", name: "My view" }] },
-		{ created: [{ id: "view-1", name: "" }] },
-		{ created: [{ id: "default", name: "Reserved" }] },
+		{ custom: null },
+		{ custom: [{ id: "", name: "My view" }] },
+		{ custom: [{ id: "view-1", name: "" }] },
 		{
-			created: [
+			custom: [
 				{ id: "view-1", name: "First" },
 				{ id: "view-1", name: "Second" },
 			],
 		},
-		{ current: "missing" },
-		{ default: "missing" },
 		{ current: { id: "default", name: "Default" } },
-		{ default: { id: "default", name: "Default" } },
 		{ current: "" },
-		{ default: null },
+		{ current: null },
 		{ dirty: "true" },
 	])("rejects invalid state: %j", (changes) => {
 		expect(

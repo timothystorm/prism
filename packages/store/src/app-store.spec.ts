@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { ZodError } from "zod";
 import { type AppState, initialAppState } from "./app-state";
 import { AppStore } from "./app-store";
@@ -238,9 +238,8 @@ describe("AppStore", () => {
 				(value) => updates.push(value),
 			);
 
-			views.created = [{ id: "view-1", name: "My view" }];
+			views.custom = [{ id: "view-1", name: "My view" }];
 			views.current = "view-1";
-			views.default = "view-1";
 			first.metrics.focusedMetric = "EXCEPTION";
 			unsubscribe();
 			views.current = "default";
@@ -253,26 +252,29 @@ describe("AppStore", () => {
 			first._state = JSON.parse(JSON.stringify(first._state));
 			expect(first.views).toBe(views);
 			expect(first.views.state).toEqual({
-				created: [{ id: "view-1", name: "My view" }],
+				custom: [{ id: "view-1", name: "My view" }],
 				current: "default",
-				default: "view-1",
 				dirty: false,
 			});
 			views.current = "view-1";
 			expect(first._state.views.current).toBe("view-1");
 		});
 
-		test("rejects snapshots with unavailable view identifiers", () => {
+		test("restores snapshots with a current identifier outside the custom views", () => {
 			const appStore = new AppStore();
 			const initial = appStore._state;
 
-			expect(() => {
-				appStore._state = {
-					...initial,
-					views: { ...initial.views, default: "missing" },
-				};
-			}).toThrow(ZodError);
-			expect(appStore._state).toBe(initial);
+			appStore._state = {
+				...initial,
+				views: { custom: [], current: "missing", dirty: true },
+			};
+
+			expect(appStore.views.state).toEqual({
+				custom: [],
+				current: "missing",
+				dirty: true,
+			});
+			expect(initial).toEqual(initialAppState);
 		});
 
 		test("starts with the configured initial application state", () => {
@@ -410,6 +412,227 @@ describe("AppStore", () => {
 	});
 
 	describe("subscriptions", () => {
+		test("infers heterogeneous selector tuples and previous values", () => {
+			const appStore = new AppStore();
+			const unsubscribe = appStore.subscribe(
+				[
+					(state) => state.metrics.focusedMetric,
+					(state) => state.columns,
+					(state) => state.filters.active,
+					(state) => state.account,
+				],
+				(value, previousValue) => {
+					expectTypeOf(value).toEqualTypeOf<
+						[
+							AppState["metrics"]["focusedMetric"],
+							AppState["columns"],
+							AppState["filters"]["active"],
+							AppState["account"],
+						]
+					>();
+					expectTypeOf(previousValue).toEqualTypeOf<typeof value>();
+					const [metric, columns, filters, account] = value;
+					expectTypeOf(metric).toEqualTypeOf<
+						AppState["metrics"]["focusedMetric"]
+					>();
+					expectTypeOf(columns).toEqualTypeOf<AppState["columns"]>();
+					expectTypeOf(filters).toEqualTypeOf<AppState["filters"]["active"]>();
+					expectTypeOf(account).toEqualTypeOf<AppState["account"]>();
+				},
+			);
+			expectTypeOf(unsubscribe).toEqualTypeOf<() => void>();
+			unsubscribe();
+
+			const selectors = [
+				(state: AppState) => state.columns,
+				(state: AppState) => state.account,
+			] as const;
+			appStore.subscribe(selectors, ([columns, account]) => {
+				expectTypeOf(columns).toEqualTypeOf<AppState["columns"]>();
+				expectTypeOf(account).toEqualTypeOf<AppState["account"]>();
+			})();
+
+			const invalidCalls = () => {
+				// @ts-expect-error Selector tuples cannot be empty.
+				appStore.subscribe([], () => {});
+				// @ts-expect-error The listener must match the selected element type.
+				appStore.subscribe(
+					[(state: AppState) => state.columns],
+					(_value: [string]) => {},
+				);
+			};
+			void invalidCalls;
+		});
+
+		test("emits complete ordered tuples only when selected values change", () => {
+			const appStore = new AppStore();
+			type Selection = [
+				AppState["metrics"]["focusedMetric"],
+				AppState["account"]["active"],
+			];
+			const updates: Array<{ value: Selection; previousValue: Selection }> = [];
+			appStore.subscribe(
+				[
+					(state) => state.metrics.focusedMetric,
+					(state) => state.account.active,
+				],
+				(value, previousValue) => updates.push({ value, previousValue }),
+			);
+
+			expect(updates).toEqual([]);
+			appStore.columns.selectedColumns = [{ name: "TRACKING_ID" }];
+			expect(updates).toEqual([]);
+
+			appStore.metrics.focusedMetric = "EXCEPTION";
+			appStore.account.activeAccounts = ["accounts-1"];
+
+			expect(updates).toEqual([
+				{
+					value: ["EXCEPTION", []],
+					previousValue: [initialAppState.metrics.focusedMetric, []],
+				},
+				{
+					value: ["EXCEPTION", ["accounts-1"]],
+					previousValue: ["EXCEPTION", []],
+				},
+			]);
+		});
+
+		test("supports a one-element selector tuple and unsubscribe", () => {
+			const appStore = new AppStore();
+			const updates: string[][] = [];
+			const unsubscribe = appStore.subscribe(
+				[(state) => state.account.active],
+				([accounts], [previousAccounts]) => {
+					expectTypeOf(accounts).toEqualTypeOf<string[]>();
+					expectTypeOf(previousAccounts).toEqualTypeOf<string[]>();
+					updates.push(accounts);
+				},
+			);
+
+			appStore.account.activeAccounts = ["accounts-1"];
+			unsubscribe();
+			appStore.account.activeAccounts = ["accounts-2"];
+
+			expect(updates).toEqual([["accounts-1"]]);
+		});
+
+		test("notifies once with a consistent tuple for an atomic state replacement", () => {
+			const appStore = new AppStore();
+			type Selection = [AppState["columns"], AppState["account"]];
+			const updates: Array<{ value: Selection; previousValue: Selection }> = [];
+			const initial = appStore._state;
+			appStore.subscribe(
+				[(state) => state.columns, (state) => state.account],
+				(value, previousValue) => updates.push({ value, previousValue }),
+			);
+
+			appStore._state = {
+				...initial,
+				columns: { selectedColumns: [{ name: "TRACKING_ID" }] },
+				account: { active: ["accounts-1"], dirty: true },
+			};
+
+			expect(updates).toEqual([
+				{
+					value: [
+						{ selectedColumns: [{ name: "TRACKING_ID" }] },
+						{ active: ["accounts-1"], dirty: true },
+					],
+					previousValue: [initial.columns, initial.account],
+				},
+			]);
+			expect(updates[0]?.value[0]).toBe(appStore._state.columns);
+			expect(updates[0]?.value[1]).toBe(appStore._state.account);
+			expect(updates[0]?.previousValue[0]).toBe(initial.columns);
+			expect(updates[0]?.previousValue[1]).toBe(initial.account);
+		});
+
+		test("treats newly allocated selector results as changes", () => {
+			const appStore = new AppStore();
+			const updates: Array<{
+				value: { accounts: string[] };
+				previousValue: { accounts: string[] };
+			}> = [];
+			appStore.subscribe(
+				[(state) => ({ accounts: state.account.active })],
+				([value], [previousValue]) => updates.push({ value, previousValue }),
+			);
+
+			appStore.metrics.focusedMetric = "EXCEPTION";
+
+			expect(updates).toEqual([
+				{ value: { accounts: [] }, previousValue: { accounts: [] } },
+			]);
+			expect(updates[0]?.value).not.toBe(updates[0]?.previousValue);
+			expect(updates[0]?.value.accounts).toBe(
+				updates[0]?.previousValue.accounts,
+			);
+		});
+
+		test("notifies for equal selected data with distinct references", () => {
+			const appStore = new AppStore();
+			const initial = appStore._state;
+			const updates: Array<{ value: string[]; previousValue: string[] }> = [];
+			appStore.subscribe(
+				[(state) => state.account.active],
+				([value], [previousValue]) => updates.push({ value, previousValue }),
+			);
+
+			appStore._state = JSON.parse(JSON.stringify(initial));
+
+			expect(updates).toEqual([{ value: [], previousValue: [] }]);
+			expect(updates[0]?.value).toBe(appStore.account.activeAccounts);
+			expect(updates[0]?.previousValue).toBe(initial.account.active);
+			expect(updates[0]?.value).not.toBe(updates[0]?.previousValue);
+		});
+
+		test("unsubscribes a tuple listener without affecting independent subscribers", () => {
+			const appStore = new AppStore();
+			const tupleUpdates: string[][] = [];
+			const singleUpdates: string[][] = [];
+			const unsubscribe = appStore.subscribe(
+				[(state) => state.account.active, (state) => state.columns],
+				([accounts]) => tupleUpdates.push(accounts),
+			);
+			const unsubscribeSingle = appStore.subscribe(
+				(state) => state.account.active,
+				(accounts) => singleUpdates.push(accounts),
+			);
+
+			appStore.account.activeAccounts = ["accounts-1"];
+			unsubscribe();
+			appStore.account.activeAccounts = ["accounts-2"];
+
+			expect(tupleUpdates).toEqual([["accounts-1"]]);
+			expect(singleUpdates).toEqual([["accounts-1"], ["accounts-2"]]);
+			unsubscribeSingle();
+		});
+
+		test("captures selectors independently of later caller mutations", () => {
+			const appStore = new AppStore();
+			const selectors: [(state: AppState) => string[]] = [
+				(state) => state.account.active,
+			];
+			const updates: string[][] = [];
+			appStore.subscribe(selectors, ([accounts]) => updates.push(accounts));
+
+			selectors[0] = (state) => state.statuses.selectedStatuses;
+			appStore.statuses.selectedStatuses = ["DELIVERED"];
+			expect(updates).toEqual([]);
+
+			appStore.account.activeAccounts = ["accounts-1"];
+			expect(updates).toEqual([["accounts-1"]]);
+		});
+
+		test("rejects an empty selector array when types are bypassed", () => {
+			const appStore = new AppStore();
+
+			expect(() =>
+				Reflect.apply(appStore.subscribe, appStore, [[], () => {}]),
+			).toThrow(TypeError);
+		});
+
 		test("observes filter changes but not duplicate additions, missing removals, or other slices", () => {
 			const first = new AppStore();
 			const second = new AppStore();

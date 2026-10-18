@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Identifier for the built-in view, which is not included in created views.
+ * Identifier for the built-in view, selected in the initial views state.
  */
 export const DEFAULT_VIEW_ID = "default";
 
