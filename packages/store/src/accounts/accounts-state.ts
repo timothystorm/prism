@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AccountsSchema } from "./accounts-schema";
 
 /**
  * Account identifiers currently selected to focus application filters and status.
@@ -6,11 +7,7 @@ import { z } from "zod";
  * Controllers manage the dirty flag.
  */
 export const AccountsStateSchema = z.object({
-	active: z
-		.array(z.string().min(1))
-		.refine((accounts) => new Set(accounts).size === accounts.length, {
-			message: "Accounts must be unique",
-		}),
+	activeAccounts: AccountsSchema,
 	dirty: z.boolean().default(false),
 });
 
@@ -18,6 +15,6 @@ export type AccountsState = z.infer<typeof AccountsStateSchema>;
 
 /** Initial accounts selection state. */
 export const initialAccountsState: AccountsState = {
-	active: [],
+	activeAccounts: [],
 	dirty: false,
 };

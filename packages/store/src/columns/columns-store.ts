@@ -17,21 +17,22 @@ export class ColumnsStore extends BaseStore<"columns"> {
 	/**
 	 * @return The currently selected columns in display order.
 	 */
-	get selectedColumns(): Columns {
-		return this.state.selectedColumns;
+	getActiveColumns(): Columns {
+		return this.getState().activeColumns;
 	}
 
 	/**
-	 * Sets the currently selected columns in display order. Column names must be unique, and trackId is required.
+	 * Sets the currently selected columns in display order. Column names must be unique, and TRACKING_ID is required.
+	 * Preserves the dirty flag; controllers manage it through setState().
 	 *
 	 * @param columns The columns to set as selected.
 	 * @throws ZodError If the selections are invalid. The state remains unchanged.
 	 */
-	set selectedColumns(columns: Columns) {
+	setActiveColumns(columns: Columns): void {
 		const validated = ColumnsSchema.parse(columns);
-		this.setState(
+		this.setAppState(
 			produce<AppState>((state) => {
-				state.columns.selectedColumns = validated;
+				state.columns.activeColumns = validated;
 			}),
 		);
 	}

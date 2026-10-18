@@ -1,20 +1,20 @@
 import { describe, expect, test } from "vitest";
-import { ZodError, type z } from "zod";
+import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
-import { FilterStore } from "./filter-store";
+import { FilterStore } from "../index";
 import { type Filter, FilterSchema } from "./filters-schema";
 
-function createFilterStore(active: Filter[] = [], dirty = false) {
+function createFilterStore(activeFilters: Filter[] = [], dirty = false) {
 	const store = createStore<AppState>(() => ({
 		...initialAppState,
-		filters: { active, dirty },
+		filters: { activeFilters, dirty },
 	}));
 	const actions = new FilterStore(store.getState, store.setState);
 	return { store, actions };
 }
 
-describe("FilterStore.state", () => {
+describe("FilterStore.getState/setState", () => {
 	test("replaces and clears filters without retaining caller-owned criteria or selections", () => {
 		const { store, actions } = createFilterStore();
 		const initial = store.getState();
@@ -29,15 +29,15 @@ describe("FilterStore.state", () => {
 		const updates: AppState[] = [];
 		store.subscribe((state) => updates.push(state));
 
-		actions.state = { active, dirty: true };
+		actions.setState({ activeFilters: active, dirty: true });
 		active.length = 0;
 		if (filter.type === "SHIPMENT:COMMIT_DATE") {
 			filter.criteria.start = "2000-10-17T00:00:00.000Z";
 			filter.criteria.end = "2000-10-17T23:59:59.999Z";
 		}
 
-		expect(actions.state).toEqual({
-			active: [
+		expect(actions.getState()).toEqual({
+			activeFilters: [
 				{
 					type: "SHIPMENT:COMMIT_DATE",
 					criteria: {
@@ -48,23 +48,23 @@ describe("FilterStore.state", () => {
 			],
 			dirty: true,
 		});
-		expect(initial.filters).toEqual({ active: [], dirty: false });
+		expect(initial.filters).toEqual({ activeFilters: [], dirty: false });
 		expect(store.getState().columns).toBe(initial.columns);
 		expect(store.getState().metrics).toBe(initial.metrics);
 		expect(store.getState().statuses).toBe(initial.statuses);
 		expect(updates).toHaveLength(1);
 
-		actions.state = { active: [], dirty: false };
-		expect(actions.state).toEqual({ active: [], dirty: false });
+		actions.setState({ activeFilters: [], dirty: false });
+		expect(actions.getState()).toEqual({ activeFilters: [], dirty: false });
 		expect(updates).toHaveLength(2);
 	});
 
 	test.each([
 		null,
 		{},
-		{ active: [], dirty: "true" },
+		{ activeFilters: [], dirty: "true" },
 		{
-			active: [
+			activeFilters: [
 				{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
 				{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-2"] },
 			],
@@ -80,334 +80,141 @@ describe("FilterStore.state", () => {
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
-			expect(() => Reflect.set(actions, "state", input)).toThrow(ZodError);
+			expect(() => Reflect.apply(actions.setState, actions, [input])).toThrow(
+				ZodError,
+			);
 			expect(store.getState()).toBe(initial);
 			expect(updates).toHaveLength(0);
 		},
 	);
 });
 
-describe.each([false, true])(
-	"FilterStore.removeActiveFilter with dirty=%s",
-	(dirty) => {
-		test.each([
-			{
-				filterType: "SHIPMENT:INVOICE_NUMBER",
-				remainingTypes: [
-					"SHIPMENT:COMMIT_DATE",
-					"SHIPMENT:DELIVERY_PREDICTION",
-				],
-			},
-			{
-				filterType: "SHIPMENT:COMMIT_DATE",
-				remainingTypes: [
-					"SHIPMENT:INVOICE_NUMBER",
-					"SHIPMENT:DELIVERY_PREDICTION",
-				],
-			},
-			{
-				filterType: "SHIPMENT:DELIVERY_PREDICTION",
-				remainingTypes: ["SHIPMENT:INVOICE_NUMBER", "SHIPMENT:COMMIT_DATE"],
-			},
-		])(
-			"removes $filterType and notifies once",
-			({ filterType, remainingTypes }) => {
-				const { store, actions } = createFilterStore(
-					[
-						{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
-						{
-							type: "SHIPMENT:COMMIT_DATE",
-							criteria: {
-								start: "2026-10-17T00:00:00.000Z",
-								end: "2026-10-17T23:59:59.999Z",
-							},
-						},
-						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
-					],
-					dirty,
-				);
-				const initial = store.getState();
-				const updates: AppState[] = [];
-				store.subscribe((state) => updates.push(state));
-
-				const result = actions.removeActiveFilter(filterType);
-
-				expect(result).toBe(actions.state.active);
-				expect(result.map((filter) => filter.type)).toEqual(remainingTypes);
-				for (const filter of result) {
-					expect(initial.filters.active).toContain(filter);
-				}
-				expect(initial.filters.active.map((filter) => filter.type)).toEqual([
-					"SHIPMENT:INVOICE_NUMBER",
-					"SHIPMENT:COMMIT_DATE",
-					"SHIPMENT:DELIVERY_PREDICTION",
-				]);
-				expect(actions.state.dirty).toBe(dirty);
-				expect(store.getState().columns).toBe(initial.columns);
-				expect(store.getState().statuses).toBe(initial.statuses);
-				expect(store.getState().metrics).toBe(initial.metrics);
-				expect(updates).toHaveLength(1);
-				expect(updates[0]).toBe(store.getState());
-
-				const afterRemoval = store.getState();
-				expect(actions.removeActiveFilter(filterType)).toBe(result);
-				expect(store.getState()).toBe(afterRemoval);
-				expect(updates).toHaveLength(1);
-			},
-		);
-
-		test("removes the only filter and leaves an empty collection", () => {
+describe("FilterStore.getActiveFilters/setActiveFilters", () => {
+	test.each([false, true])(
+		"replaces and clears the list while preserving dirty=%s, order, and earlier snapshots",
+		(dirty) => {
 			const { store, actions } = createFilterStore(
-				[{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: false }],
+				[{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] }],
 				dirty,
 			);
 			const initial = store.getState();
-			const updates: AppState[] = [];
-			store.subscribe((state) => updates.push(state));
-
-			const result = actions.removeActiveFilter("SHIPMENT:SIGNATURE_AVAILABLE");
-
-			expect(result).toBe(actions.state.active);
-			expect(actions.state).toEqual({ active: [], dirty });
-			expect(initial.filters.active).toEqual([
-				{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: false },
-			]);
-			expect(updates).toHaveLength(1);
-		});
-
-		test.each(["SHIPMENT:SIGNATURE_AVAILABLE", "UNKNOWN", ""])(
-			"ignores absent type %j in populated and empty collections",
-			(filterType) => {
-				const activeCollections: Filter[][] = [
-					[],
-					[{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" }],
-				];
-				for (const active of activeCollections) {
-					const { store, actions } = createFilterStore(active, dirty);
-					const initial = store.getState();
-					const updates: AppState[] = [];
-					store.subscribe((state) => updates.push(state));
-
-					expect(actions.removeActiveFilter(filterType)).toBe(
-						initial.filters.active,
-					);
-					expect(store.getState()).toBe(initial);
-					expect(updates).toHaveLength(0);
-				}
-			},
-		);
-	},
-);
-
-describe("FilterStore.addActiveFilter", () => {
-	test.each([false, true])(
-		"adds a validated filter without changing dirty=%s or retaining caller input",
-		(dirty) => {
-			const { store, actions } = createFilterStore([], dirty);
-			const initial = store.getState();
-			const filter: Filter = {
-				type: "SHIPMENT:DESTINATION",
-				criteria: [{ type: "CITY", value: "Chicago" }],
-			};
-			const updates: AppState[] = [];
-			store.subscribe((state) => updates.push(state));
-
-			const result = actions.addActiveFilter(filter);
-			filter.criteria[0] = { type: "CITY", value: "Atlanta" };
-			filter.criteria.push({ type: "CITY", value: "Boston" });
-
-			expect(result).toBe(actions.state.active);
-			expect(actions.state).toEqual({
-				active: [
-					{
-						type: "SHIPMENT:DESTINATION",
-						criteria: [{ type: "CITY", value: "Chicago" }],
-					},
-				],
-				dirty,
-			});
-			expect(initial.filters).toEqual({ active: [], dirty });
-			expect(store.getState().columns).toBe(initial.columns);
-			expect(store.getState().statuses).toBe(initial.statuses);
-			expect(store.getState().metrics).toBe(initial.metrics);
-			expect(updates).toHaveLength(1);
-		},
-	);
-
-	test.each([false, true])(
-		"ignores the same object without changing dirty=%s or notifying subscribers",
-		(dirty) => {
-			const filter: Filter = {
-				type: "SHIPMENT:DELIVERY_PREDICTION",
-				criteria: "ON_TIME",
-			};
-			const { store, actions } = createFilterStore([filter], dirty);
-			const initial = store.getState();
-			const updates: AppState[] = [];
-			store.subscribe((state) => updates.push(state));
-
-			expect(actions.addActiveFilter(filter)).toBe(initial.filters.active);
-			expect(store.getState()).toBe(initial);
-			expect(updates).toHaveLength(0);
-		},
-	);
-
-	const identicalFilters: z.input<typeof FilterSchema>[] = [
-		{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1", "INV-2"] },
-		{
-			type: "SHIPMENT:DESTINATION",
-			criteria: [{ value: "Chicago", type: "CITY" }],
-		},
-		{
-			type: "SHIPMENT:TIME_IN_NETWORK",
-			criteria: { end: "17:00", start: "08:00" },
-		},
-		{
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
-				start: "2026-10-17T16:05:02.359Z",
-				end: "2026-10-18T09:30:45.012Z",
-			},
-		},
-		{ type: "SHIPMENT:SIGNATURE_AVAILABLE" },
-	];
-
-	test.each(identicalFilters)(
-		"ignores equivalent parsed criteria for $type",
-		(filter) => {
-			const { store, actions } = createFilterStore([
-				FilterSchema.parse(filter),
-			]);
-			const initial = store.getState();
-			const updates: AppState[] = [];
-			store.subscribe((state) => updates.push(state));
-
-			expect(actions.addActiveFilter(filter)).toBe(initial.filters.active);
-			expect(store.getState()).toBe(initial);
-			expect(updates).toHaveLength(0);
-		},
-	);
-
-	test.each([false, true])(
-		"replaces changed criteria in place without changing dirty=%s and notifies once",
-		(dirty) => {
-			const { store, actions } = createFilterStore(
-				[
-					{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
-					{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
-					{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: true },
-				],
-				dirty,
-			);
-			const initial = store.getState();
-			const updates: AppState[] = [];
-			store.subscribe((state) => updates.push(state));
-
-			const result = actions.addActiveFilter({
-				type: "SHIPMENT:DELIVERY_PREDICTION",
-				criteria: "DELAYED",
-			});
-
-			expect(result).toBe(actions.state.active);
-			expect(actions.state).toEqual({
-				active: [
-					{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
-					{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "DELAYED" },
-					{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: true },
-				],
-				dirty,
-			});
-			expect(result[0]).toBe(initial.filters.active[0]);
-			expect(result[2]).toBe(initial.filters.active[2]);
-			expect(initial.filters.active[1]?.criteria).toBe("ON_TIME");
-			expect(initial.filters.dirty).toBe(dirty);
-			expect(updates).toHaveLength(1);
-		},
-	);
-
-	test("preserves supplied date strings when adding and replacing filters", () => {
-		const { store, actions } = createFilterStore();
-		actions.addActiveFilter({
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
+			const criteria = {
 				start: "2026-10-17T16:05:02.359Z",
 				end: "2026-10-17T17:30:45.012Z",
-			},
-		});
+			};
+			const input: Filter[] = [
+				{ type: "SHIPMENT:COMMIT_DATE", criteria },
+				{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: true },
+			];
+			const updates: AppState[] = [];
+			store.subscribe((state) => updates.push(state));
+
+			actions.setActiveFilters(input);
+			criteria.start = "2000-10-17T00:00:00.000Z";
+			input.reverse();
+			input.push({ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "DELAYED" });
+
+			expect(actions.getActiveFilters()).toBe(
+				store.getState().filters.activeFilters,
+			);
+			expect(actions.getState()).toEqual({
+				activeFilters: [
+					{
+						type: "SHIPMENT:COMMIT_DATE",
+						criteria: {
+							start: "2026-10-17T16:05:02.359Z",
+							end: "2026-10-17T17:30:45.012Z",
+						},
+					},
+					{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: true },
+				],
+				dirty,
+			});
+			expect(initial.filters).toEqual({
+				activeFilters: [
+					{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
+				],
+				dirty,
+			});
+			expect(store.getState().columns).toBe(initial.columns);
+			expect(store.getState().metrics).toBe(initial.metrics);
+			expect(store.getState().statuses).toBe(initial.statuses);
+			expect(updates).toHaveLength(1);
+
+			actions.setActiveFilters([]);
+
+			expect(actions.getActiveFilters()).toEqual([]);
+			expect(actions.getState().dirty).toBe(dirty);
+			expect(updates).toHaveLength(2);
+		},
+	);
+
+	test("notifies for equal filter contents in a replacement list", () => {
+		const { store, actions } = createFilterStore([
+			{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
+		]);
 		const initial = store.getState();
-		expect(actions.state.active).toEqual([
-			{
-				type: "SHIPMENT:COMMIT_DATE",
-				criteria: {
-					start: "2026-10-17T16:05:02.359Z",
-					end: "2026-10-17T17:30:45.012Z",
-				},
-			},
+		const updates: AppState[] = [];
+		store.subscribe((state) => updates.push(state));
+
+		actions.setActiveFilters([
+			{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
 		]);
 
-		actions.addActiveFilter({
-			type: "SHIPMENT:INVOICE_NUMBER",
-			criteria: ["INV-1"],
-		});
-		expect(actions.state.active[0]).toBe(initial.filters.active[0]);
+		expect(actions.getActiveFilters()).toEqual(initial.filters.activeFilters);
+		expect(actions.getActiveFilters()).not.toBe(initial.filters.activeFilters);
+		expect(updates).toHaveLength(1);
+	});
 
-		actions.addActiveFilter({
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
-				start: "2026-10-18T11:15:00.123Z",
-				end: "2026-10-18T12:45:00.456Z",
-			},
-		});
-		expect(actions.state.active).toEqual([
-			{
-				type: "SHIPMENT:COMMIT_DATE",
-				criteria: {
-					start: "2026-10-18T11:15:00.123Z",
-					end: "2026-10-18T12:45:00.456Z",
-				},
-			},
-			{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
+	test("stores parsed defaults when criteria are omitted", () => {
+		const { actions } = createFilterStore();
+
+		actions.setActiveFilters([{ type: "SHIPMENT:SIGNATURE_AVAILABLE" }]);
+
+		expect(actions.getActiveFilters()).toEqual([
+			{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: false },
 		]);
 	});
 
 	test.each([
-		null,
-		{ type: "UNKNOWN", criteria: true },
-		{ type: "SHIPMENT:INVOICE_NUMBER", criteria: [] },
-		{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "UNKNOWN" },
+		{ filters: null },
+		{ filters: {} },
 		{
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
-				start: "2026-10-17",
-				end: "2026-10-18",
-			},
+			filters: [
+				{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
+				{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-2"] },
+			],
 		},
 		{
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
-				start: "2026-10-17T00:00:00.000-06:00",
-				end: "2026-10-18T23:59:59.999-06:00",
-			},
+			filters: [
+				{ type: "SHIPMENT:SIGNATURE_AVAILABLE", criteria: true },
+				{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "UNKNOWN" },
+			],
 		},
 		{
-			type: "SHIPMENT:COMMIT_DATE",
-			criteria: {
-				start: new Date("2026-10-17T00:00:00.000Z"),
-				end: new Date("2026-10-18T23:59:59.999Z"),
-			},
+			filters: [
+				{
+					type: "SHIPMENT:COMMIT_DATE",
+					criteria: {
+						start: "2026-10-17T00:00:00.000-06:00",
+						end: "2026-10-18T23:59:59.999-06:00",
+					},
+				},
+			],
 		},
 	])(
-		"rejects invalid input %j without changing state or notifying",
-		(filter) => {
-			const { store, actions } = createFilterStore([
-				{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
-			]);
+		"rejects an invalid replacement list $filters without changing state or notifying",
+		({ filters }) => {
+			const { store, actions } = createFilterStore(
+				[{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" }],
+				true,
+			);
 			const initial = store.getState();
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
 			expect(() =>
-				Reflect.apply(actions.addActiveFilter, actions, [filter]),
+				Reflect.apply(actions.setActiveFilters, actions, [filters]),
 			).toThrow(ZodError);
 			expect(store.getState()).toBe(initial);
 			expect(updates).toHaveLength(0);

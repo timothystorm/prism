@@ -7,8 +7,9 @@ import { MetricsStore } from "./metrics-store";
 
 function createMetricsStore(
 	metrics: AppState["metrics"] = {
-		focusedMetric: null,
-		trackedMetrics: [],
+		activeMetric: null,
+		selectedMetrics: [],
+		dirty: false,
 	},
 ) {
 	const store = createStore<AppState>(() => ({
@@ -22,7 +23,7 @@ function createMetricsStore(
 
 describe("MetricsStore", () => {
 	describe("validation", () => {
-		test.each(["state", "trackedMetrics"] as const)(
+		test.each(["setState", "setSelectedMetrics"] as const)(
 			"rejects duplicate metrics through %s without changing state, input, or notifying subscribers",
 			(property) => {
 				for (const input of [
@@ -30,8 +31,9 @@ describe("MetricsStore", () => {
 					["CUSTOM:ONE", "LABEL_CREATED", "CUSTOM:ONE"],
 				]) {
 					const { store, actions } = createMetricsStore({
-						focusedMetric: "LABEL_CREATED",
-						trackedMetrics: ["LABEL_CREATED"],
+						activeMetric: "LABEL_CREATED",
+						selectedMetrics: ["LABEL_CREATED"],
+						dirty: false,
 					});
 					const initial = store.getState();
 					const originalInput = [...input];
@@ -40,15 +42,17 @@ describe("MetricsStore", () => {
 						notifications += 1;
 					});
 					const value =
-						property === "state"
-							? { focusedMetric: "EXCEPTION", trackedMetrics: input }
+						property === "setState"
+							? { activeMetric: "EXCEPTION", selectedMetrics: input }
 							: input;
 
-					expect(() => Reflect.set(actions, property, value)).toThrow(ZodError);
+					expect(() =>
+						Reflect.apply(actions[property], actions, [value]),
+					).toThrow(ZodError);
 
 					expect(store.getState()).toBe(initial);
-					expect(actions.focusedMetric).toBe("LABEL_CREATED");
-					expect(actions.trackedMetrics).toEqual(["LABEL_CREATED"]);
+					expect(actions.getActiveMetric()).toBe("LABEL_CREATED");
+					expect(actions.getSelectedMetrics()).toEqual(["LABEL_CREATED"]);
 					expect(input).toEqual(originalInput);
 					expect(notifications).toBe(0);
 				}
@@ -57,26 +61,26 @@ describe("MetricsStore", () => {
 
 		test.each([
 			{
-				property: "state",
+				property: "setState",
 				value: {
-					focusedMetric: "unknown",
-					trackedMetrics: [],
+					activeMetric: "unknown",
+					selectedMetrics: [],
 				},
 			},
 			{
-				property: "state",
+				property: "setState",
 				value: {
-					focusedMetric: null,
-					trackedMetrics: ["unknown"],
+					activeMetric: null,
+					selectedMetrics: ["unknown"],
 				},
 			},
-			{ property: "focusedMetric", value: "unknown" },
+			{ property: "setActiveMetric", value: "unknown" },
 			{
-				property: "trackedMetrics",
+				property: "setSelectedMetrics",
 				value: ["EXCEPTION", "unknown"],
 			},
-			{ property: "trackedMetrics", value: null },
-		])(
+			{ property: "setSelectedMetrics", value: null },
+		] as const)(
 			"rejects invalid $property input without changing state or notifying subscribers ($value)",
 			({ property, value }) => {
 				const { store, actions } = createMetricsStore();
@@ -86,7 +90,9 @@ describe("MetricsStore", () => {
 					notifications += 1;
 				});
 
-				expect(() => Reflect.set(actions, property, value)).toThrow(ZodError);
+				expect(() =>
+					Reflect.apply(actions[property], actions, [value]),
+				).toThrow(ZodError);
 
 				expect(store.getState()).toBe(initial);
 				expect(notifications).toBe(0);
@@ -94,78 +100,163 @@ describe("MetricsStore", () => {
 		);
 	});
 
-	describe("state", () => {
+	describe("getState/setState", () => {
+		test.each([false, true])(
+			"preserves controller-managed dirty=%s when changing or clearing metrics",
+			(dirty) => {
+				const { actions } = createMetricsStore();
+				actions.setState({ ...actions.getState(), dirty });
+
+				actions.setActiveMetric("EXCEPTION");
+				expect(actions.getState().dirty).toBe(dirty);
+				actions.setSelectedMetrics(["EXCEPTION"]);
+				expect(actions.getState()).toEqual({
+					activeMetric: "EXCEPTION",
+					selectedMetrics: ["EXCEPTION"],
+					dirty,
+				});
+
+				actions.setActiveMetric(null);
+				expect(actions.getState().dirty).toBe(dirty);
+				actions.setSelectedMetrics([]);
+				expect(actions.getState()).toEqual({
+					activeMetric: null,
+					selectedMetrics: [],
+					dirty,
+				});
+			},
+		);
+
+		test("allows the controller to toggle dirty without changing metric selections", () => {
+			const { store, actions } = createMetricsStore();
+			const initial = store.getState();
+			const updates: AppState[] = [];
+			store.subscribe((state) => updates.push(state));
+
+			actions.setState({ ...actions.getState(), dirty: true });
+			actions.setState({ ...actions.getState(), dirty: false });
+
+			expect(updates.map((state) => state.metrics)).toEqual([
+				{ activeMetric: null, selectedMetrics: [], dirty: true },
+				{ activeMetric: null, selectedMetrics: [], dirty: false },
+			]);
+			expect(initial.metrics.dirty).toBe(false);
+		});
+
+		test.each([null, "true", 1])(
+			"rejects invalid dirty=%j without updating or notifying",
+			(dirty) => {
+				const { store, actions } = createMetricsStore();
+				const initial = store.getState();
+				const updates: AppState[] = [];
+				store.subscribe((state) => updates.push(state));
+
+				expect(() =>
+					Reflect.apply(actions.setState, actions, [
+						{ ...actions.getState(), dirty },
+					]),
+				).toThrow(ZodError);
+				expect(store.getState()).toBe(initial);
+				expect(updates).toHaveLength(0);
+			},
+		);
+
 		test("returns the current metrics state", () => {
 			const { store, actions } = createMetricsStore();
 
-			expect(actions.state).toBe(store.getState().metrics);
+			expect(actions.getState()).toBe(store.getState().metrics);
 		});
 
 		test("replaces the metrics state without changing earlier snapshots or the input", () => {
 			const { store, actions } = createMetricsStore({
-				focusedMetric: "EXCEPTION",
-				trackedMetrics: ["CUSTOM:ONE"],
+				activeMetric: "EXCEPTION",
+				selectedMetrics: ["CUSTOM:ONE"],
+				dirty: false,
 			});
 			const initial = store.getState();
 			const nextState: AppState["metrics"] = {
-				focusedMetric: "LABEL_CREATED",
-				trackedMetrics: ["CUSTOM:TWO"],
+				activeMetric: "LABEL_CREATED",
+				selectedMetrics: ["CUSTOM:TWO"],
+				dirty: true,
 			};
 
-			actions.state = nextState;
+			actions.setState(nextState);
 
-			expect(actions.state).toEqual(nextState);
+			expect(actions.getState()).toEqual(nextState);
 			expect(store.getState().metrics).toEqual(nextState);
 			expect(initial.metrics).toEqual({
-				focusedMetric: "EXCEPTION",
-				trackedMetrics: ["CUSTOM:ONE"],
+				activeMetric: "EXCEPTION",
+				selectedMetrics: ["CUSTOM:ONE"],
+				dirty: false,
 			});
 			expect(nextState).toEqual({
-				focusedMetric: "LABEL_CREATED",
-				trackedMetrics: ["CUSTOM:TWO"],
+				activeMetric: "LABEL_CREATED",
+				selectedMetrics: ["CUSTOM:TWO"],
+				dirty: true,
 			});
 		});
 	});
 
-	describe("focused metric", () => {
-		test("returns null when the focused metric is omitted", () => {
-			const { actions } = createMetricsStore({ trackedMetrics: [] });
-			expect(actions.focusedMetric).toBeNull();
-			expect(actions.trackedMetrics).toEqual([]);
+	describe("active metric", () => {
+		test.each([
+			{ selectedMetrics: [], dirty: true },
+			{ activeMetric: undefined, selectedMetrics: [], dirty: true },
+		])("stores null when the active metric is omitted: %j", (metrics) => {
+			const { store, actions } = createMetricsStore({
+				activeMetric: "EXCEPTION",
+				selectedMetrics: ["EXCEPTION"],
+				dirty: true,
+			});
+			const updates: AppState[] = [];
+			store.subscribe((state) => updates.push(state));
+
+			Reflect.apply(actions.setState, actions, [metrics]);
+
+			expect(store.getState().metrics).toEqual({
+				activeMetric: null,
+				selectedMetrics: [],
+				dirty: true,
+			});
+			expect(actions.getActiveMetric()).toBeNull();
+			expect(actions.getSelectedMetrics()).toEqual([]);
+			expect(updates).toHaveLength(1);
+			expect(updates[0]?.metrics.activeMetric).toBeNull();
 		});
 
 		test.each<MetricType>(["EXCEPTION", "LABEL_CREATED", "CUSTOM:ONE"])(
 			"sets %s as active without changing earlier snapshots or other fields",
 			(metrics) => {
 				const { store, actions } = createMetricsStore({
-					focusedMetric: null,
-					trackedMetrics: ["CUSTOM:TWO"],
+					activeMetric: null,
+					selectedMetrics: ["CUSTOM:TWO"],
+					dirty: false,
 				});
 				const initial = store.getState();
 
-				actions.focusedMetric = metrics;
+				actions.setActiveMetric(metrics);
 
-				expect(actions.focusedMetric).toBe(metrics);
+				expect(actions.getActiveMetric()).toBe(metrics);
 				expect(store.getState().metrics).toEqual({
-					focusedMetric: metrics,
-					trackedMetrics: ["CUSTOM:TWO"],
+					activeMetric: metrics,
+					selectedMetrics: ["CUSTOM:TWO"],
+					dirty: false,
 				});
-				expect(initial.metrics.focusedMetric).toBeNull();
-				expect(store.getState().metrics.trackedMetrics).toBe(
-					initial.metrics.trackedMetrics,
+				expect(initial.metrics.activeMetric).toBeNull();
+				expect(store.getState().metrics.selectedMetrics).toBe(
+					initial.metrics.selectedMetrics,
 				);
 			},
 		);
 
-		test("clears the active metric by assigning null", () => {
+		test("clears the active metric by passing null to setActiveMetric", () => {
 			const { store, actions } = createMetricsStore();
-			actions.focusedMetric = "EXCEPTION";
+			actions.setActiveMetric("EXCEPTION");
 			const selected = store.getState();
 
-			actions.focusedMetric = null;
+			actions.setActiveMetric(null);
 
-			expect(actions.focusedMetric).toBeNull();
-			expect(selected.metrics.focusedMetric).toBe("EXCEPTION");
+			expect(actions.getActiveMetric()).toBeNull();
+			expect(selected.metrics.activeMetric).toBe("EXCEPTION");
 		});
 
 		test("does not notify or replace state when focus is unchanged", () => {
@@ -176,56 +267,58 @@ describe("MetricsStore", () => {
 				notifications += 1;
 			});
 
-			actions.focusedMetric = null;
+			actions.setActiveMetric(null);
 
 			expect(store.getState()).toBe(initial);
 			expect(notifications).toBe(0);
 		});
 	});
 
-	describe("tracked metrics", () => {
+	describe("selected metrics", () => {
 		test("replaces selections with unique metrics in the supplied order", () => {
 			const { store, actions } = createMetricsStore();
-			actions.focusedMetric = "LABEL_CREATED";
-			actions.trackedMetrics = ["LABEL_CREATED"];
+			actions.setActiveMetric("LABEL_CREATED");
+			actions.setSelectedMetrics(["LABEL_CREATED"]);
 			const initial = store.getState();
 			const input: MetricType[] = ["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"];
 
-			actions.trackedMetrics = input;
+			actions.setSelectedMetrics(input);
 
 			expect(store.getState().metrics).toEqual({
-				focusedMetric: "LABEL_CREATED",
-				trackedMetrics: ["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"],
+				activeMetric: "LABEL_CREATED",
+				selectedMetrics: ["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"],
+				dirty: false,
 			});
-			expect(initial.metrics.trackedMetrics).toEqual(["LABEL_CREATED"]);
+			expect(initial.metrics.selectedMetrics).toEqual(["LABEL_CREATED"]);
 			expect(input).toEqual(["CUSTOM:ONE", "EXCEPTION", "CUSTOM:TWO"]);
-			expect(actions.trackedMetrics).not.toBe(input);
+			expect(actions.getSelectedMetrics()).not.toBe(input);
 		});
 
-		test("clears selected metrics by assigning an empty array", () => {
+		test("clears selected metrics by passing an empty array to setSelectedMetrics", () => {
 			const { actions } = createMetricsStore();
-			actions.trackedMetrics = ["EXCEPTION"];
+			actions.setSelectedMetrics(["EXCEPTION"]);
 
-			actions.trackedMetrics = [];
+			actions.setSelectedMetrics([]);
 
-			expect(actions.trackedMetrics).toEqual([]);
+			expect(actions.getSelectedMetrics()).toEqual([]);
 		});
 
-		test("notifies subscribers with the updated state when selections are assigned", () => {
+		test("notifies subscribers with the updated state when setSelectedMetrics is called", () => {
 			const { store, actions } = createMetricsStore();
 			const updates: AppState[] = [];
 			store.subscribe((state) => {
 				updates.push(state);
 			});
 
-			actions.trackedMetrics = ["EXCEPTION"];
+			actions.setSelectedMetrics(["EXCEPTION"]);
 
 			expect(updates).toEqual([
 				{
 					...initialAppState,
 					metrics: {
-						focusedMetric: null,
-						trackedMetrics: ["EXCEPTION"],
+						activeMetric: null,
+						selectedMetrics: ["EXCEPTION"],
+						dirty: false,
 					},
 				},
 			]);

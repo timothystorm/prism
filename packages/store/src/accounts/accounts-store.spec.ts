@@ -15,17 +15,19 @@ describe("AccountsStore", () => {
 	test("starts with no active accounts and a clean state", () => {
 		const { actions } = createAccountStore();
 
-		expect(actions.state).toEqual({ active: [], dirty: false });
+		expect(actions.getState()).toEqual({ activeAccounts: [], dirty: false });
 		expect(AccountsStateSchema.parse(initialAccountsState)).toEqual(
 			initialAccountsState,
 		);
-		expect(AccountsStateSchema.parse({ active: ["accounts-1"] })).toEqual({
-			active: ["accounts-1"],
+		expect(
+			AccountsStateSchema.parse({ activeAccounts: ["accounts-1"] }),
+		).toEqual({
+			activeAccounts: ["accounts-1"],
 			dirty: false,
 		});
 	});
 
-	test.each(["state", "activeAccounts"] as const)(
+	test.each(["setState", "setActiveAccounts"] as const)(
 		"updates %s immutably without retaining input references or changing other slices",
 		(property) => {
 			const { store, actions } = createAccountStore();
@@ -34,18 +36,18 @@ describe("AccountsStore", () => {
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
-			if (property === "state") {
-				actions.state = { active: activeAccounts, dirty: true };
+			if (property === "setState") {
+				actions.setState({ activeAccounts: activeAccounts, dirty: true });
 			} else {
-				actions.activeAccounts = activeAccounts;
+				actions.setActiveAccounts(activeAccounts);
 			}
 
-			expect(actions.state).toBe(store.getState().account);
-			expect(store.getState().account.active).toEqual([
+			expect(actions.getState()).toBe(store.getState().account);
+			expect(store.getState().account.activeAccounts).toEqual([
 				"accounts-1",
 				"accounts-2",
 			]);
-			expect(actions.activeAccounts).toEqual(["accounts-1", "accounts-2"]);
+			expect(actions.getActiveAccounts()).toEqual(["accounts-1", "accounts-2"]);
 			expect(initial.account).toEqual(initialAccountsState);
 			for (const key of [
 				"metrics",
@@ -57,7 +59,7 @@ describe("AccountsStore", () => {
 			}
 			expect(updates).toHaveLength(1);
 			activeAccounts.push("accounts-3");
-			expect(actions.activeAccounts).toEqual(["accounts-1", "accounts-2"]);
+			expect(actions.getActiveAccounts()).toEqual(["accounts-1", "accounts-2"]);
 		},
 	);
 
@@ -65,20 +67,23 @@ describe("AccountsStore", () => {
 		"selects one or multiple accounts and clears selections while preserving dirty=%s",
 		(dirty) => {
 			const { actions } = createAccountStore();
-			actions.state = { active: [], dirty };
+			actions.setState({ activeAccounts: [], dirty });
 
 			for (const activeAccounts of [
 				["accounts-1"],
 				["accounts-1", "accounts-2"],
 				[],
 			]) {
-				actions.activeAccounts = activeAccounts;
-				expect(actions.state).toEqual({ active: activeAccounts, dirty });
+				actions.setActiveAccounts(activeAccounts);
+				expect(actions.getState()).toEqual({
+					activeAccounts: activeAccounts,
+					dirty,
+				});
 			}
 		},
 	);
 
-	describe.each(["state", "activeAccounts"] as const)(
+	describe.each(["setState", "setActiveAccounts"] as const)(
 		"%s validation",
 		(property) => {
 			test.each([
@@ -96,11 +101,9 @@ describe("AccountsStore", () => {
 					store.subscribe((state) => updates.push(state));
 
 					expect(() =>
-						Reflect.set(
-							actions,
-							property,
-							property === "state" ? { active, dirty: false } : active,
-						),
+						Reflect.apply(actions[property], actions, [
+							property === "setState" ? { active, dirty: false } : active,
+						]),
 					).toThrow(ZodError);
 					expect(store.getState()).toBe(initial);
 					expect(updates).toHaveLength(0);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import {
 	AccountsStateSchema,
 	initialAccountsState,
@@ -15,6 +16,7 @@ import {
 	initialMetricsState,
 	MetricsStateSchema,
 } from "./metrics/metrics-state";
+import { initialSearchState, SearchStateSchema } from "./search/search-state";
 import {
 	initialStatusesState,
 	StatusesStateSchema,
@@ -31,6 +33,7 @@ export const AppStateSchema = z.object({
 	statuses: StatusesStateSchema,
 	filters: FilterStateSchema,
 	views: ViewsStateSchema,
+	search: SearchStateSchema,
 });
 
 /**
@@ -48,4 +51,5 @@ export const initialAppState: AppState = {
 	statuses: initialStatusesState,
 	filters: initialFiltersState,
 	views: initialViewsState,
+	search: initialSearchState,
 };

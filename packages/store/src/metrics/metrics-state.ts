@@ -2,24 +2,29 @@ import { z } from "zod";
 import { MetricTypeSchema } from "./metrics-schema";
 
 /**
- * Schema for the metrics state.
+ * Schema for the active metric and metrics selected for display in the current view.
+ * selectedMetrics preserves display order and contains unique metric identifiers.
+ * The dirty flag is controller-managed.
+ * The flag can track changes awaiting distribution; metric updates do not toggle it.
+ * Stored activeMetric is a metric identifier or null; omitted and undefined inputs normalize to null.
+ * The active metric is independent of the metrics selected for display.
  *
  * @example
- * const MetricsState: MetricsState = {
- *   focusedMetric: "exceptions",
- *   trackedMetrics: ["exceptions", "custom:my_custom_stat"]
+ * const metricsState: MetricsState = {
+ *   activeMetric: "EXCEPTION",
+ *   selectedMetrics: ["EXCEPTION", "CUSTOM:MY_METRIC"],
+ *   dirty: false
  * };
  */
 export const MetricsStateSchema = z.object({
-	// The currently focused metric, which can be null.
-	focusedMetric: MetricTypeSchema.nullish(),
+	activeMetric: MetricTypeSchema.nullable().default(null),
 
-	// The list of selected metrics, which can be empty.
-	trackedMetrics: z
+	selectedMetrics: z
 		.array(MetricTypeSchema)
 		.refine((metrics) => new Set(metrics).size === metrics.length, {
-			message: "Tracked metrics must be unique",
+			message: "Selected metrics must be unique",
 		}),
+	dirty: z.boolean().default(false),
 });
 
 export type MetricsState = z.infer<typeof MetricsStateSchema>;
@@ -28,6 +33,7 @@ export type MetricsState = z.infer<typeof MetricsStateSchema>;
  * Initial state for metrics.
  */
 export const initialMetricsState: MetricsState = {
-	focusedMetric: null,
-	trackedMetrics: [],
+	activeMetric: null,
+	selectedMetrics: [],
+	dirty: false,
 };

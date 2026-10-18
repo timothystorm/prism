@@ -18,37 +18,37 @@ export class StatusesStore extends BaseStore<"statuses"> {
 	 * Appends a valid status unless already selected, without changing the dirty flag.
 	 * Duplicate additions leave state and subscriptions unchanged.
 	 */
-	addSelectedStatus(status: string): Status[] {
+	addActiveStatuses(status: string): Status[] {
 		const validated = StatusSchema.parse(status);
-		this.setState(
+		this.setAppState(
 			produce<AppState>((state) => {
-				if (state.statuses.selectedStatuses.includes(validated)) return;
-				state.statuses.selectedStatuses.push(validated);
+				if (state.statuses.activeStatuses.includes(validated)) return;
+				state.statuses.activeStatuses.push(validated);
 			}),
 		);
-		return this.state.selectedStatuses;
+		return this.getState().activeStatuses;
 	}
 
 	/**
 	 * @return The currently selected parent and child status identifiers, or an empty array if none are selected.
 	 */
-	get selectedStatuses(): string[] {
-		return this.state?.selectedStatuses ?? [];
+	getActiveStatuses(): Status[] {
+		return this.getState().activeStatuses;
 	}
 
 	/**
 	 * Sets the selected status identifiers as independent OR terms without expanding or collapsing selections.
 	 * An empty array clears the selections.
+	 * Preserves the dirty flag; controllers manage it through setState().
 	 *
 	 * @param statuses The parent and child status identifiers to set as selected.
 	 * @throws ZodError If the selections are invalid. The state remains unchanged.
 	 */
-	set selectedStatuses(statuses: string[]) {
-		const validated =
-			StatusesStateSchema.shape.selectedStatuses.parse(statuses);
-		this.setState(
+	setActiveStatuses(statuses: string[]): void {
+		const validated = StatusesStateSchema.shape.activeStatuses.parse(statuses);
+		this.setAppState(
 			produce<AppState>((state) => {
-				state.statuses.selectedStatuses = validated;
+				state.statuses.activeStatuses = validated;
 			}),
 		);
 	}

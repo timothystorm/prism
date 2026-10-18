@@ -1,13 +1,10 @@
 import { z } from "zod";
 
 /**
- * Schemas and types for columns state.
+ * Schema for supported column identifiers.
  *
  * @example
- * const columns: ColumnsSchema = [
- *   { name: "TRACKING_ID" },
- *   { name: "STATUS", sortDirection: "asc" }
- * ];
+ * const columnName = ColumnNameSchema.parse("TRACKING_ID");
  */
 export const ColumnNameSchema = z.enum([
 	"TRACKING_ID",
@@ -30,12 +27,12 @@ export const ColumnSchema = z.object({
  * Types for a column with an optional sort direction.
  *
  * @example
- * const column: Column = { name: "status", sortDirection: "asc" };
+ * const column: Column = { name: "STATUS", sortDirection: "asc" };
  */
 export type Column = z.infer<typeof ColumnSchema>;
 
 /**
- * Schema for columns in display order. Column names must be unique, and trackId is required.
+ * Schema for columns in display order. Column names must be unique, and TRACKING_ID is required.
  */
 export const ColumnsSchema = z
 	.array(ColumnSchema)

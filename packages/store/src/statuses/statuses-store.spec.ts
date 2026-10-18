@@ -1,13 +1,13 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
+import { StatusesStore } from "../index";
 import {
 	ParentStatusSchema,
 	type Status,
 	SubStatusSchema,
 } from "./statuses-schema";
-import { StatusesStore } from "./statuses-store";
 
 function createStatusesStore() {
 	const store = createStore<AppState>(() => ({ ...initialAppState }));
@@ -16,7 +16,7 @@ function createStatusesStore() {
 }
 
 describe("StatusesStore", () => {
-	describe.each([false, true])("addSelectedStatus with dirty=%s", (dirty) => {
+	describe.each([false, true])("addActiveStatuses with dirty=%s", (dirty) => {
 		test.each([
 			"LABEL_CREATED",
 			"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
@@ -24,20 +24,20 @@ describe("StatusesStore", () => {
 			"appends %s without expanding or collapsing selections",
 			(status) => {
 				const { store, actions } = createStatusesStore();
-				actions.state = { selectedStatuses: ["DELIVERED"], dirty };
+				actions.setState({ activeStatuses: ["DELIVERED"], dirty });
 				const initial = store.getState();
 				const updates: AppState[] = [];
 				store.subscribe((state) => updates.push(state));
 
-				const result = actions.addSelectedStatus(status);
+				const result = actions.addActiveStatuses(status);
 
-				expect(result).toBe(actions.selectedStatuses);
-				expect(actions.state).toEqual({
-					selectedStatuses: ["DELIVERED", status],
+				expect(result).toBe(actions.getActiveStatuses());
+				expect(actions.getState()).toEqual({
+					activeStatuses: ["DELIVERED", status],
 					dirty,
 				});
 				expect(initial.statuses).toEqual({
-					selectedStatuses: ["DELIVERED"],
+					activeStatuses: ["DELIVERED"],
 					dirty,
 				});
 				expect(store.getState().columns).toBe(initial.columns);
@@ -49,17 +49,17 @@ describe("StatusesStore", () => {
 
 		test("ignores an already selected status without notifying subscribers", () => {
 			const { store, actions } = createStatusesStore();
-			actions.state = {
-				selectedStatuses: ["LABEL_CREATED", "DELIVERED"],
+			actions.setState({
+				activeStatuses: ["LABEL_CREATED", "DELIVERED"],
 				dirty,
-			};
+			});
 			const initial = store.getState();
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
-			const result = actions.addSelectedStatus("LABEL_CREATED");
+			const result = actions.addActiveStatuses("LABEL_CREATED");
 
-			expect(result).toBe(initial.statuses.selectedStatuses);
+			expect(result).toBe(initial.statuses.activeStatuses);
 			expect(store.getState()).toBe(initial);
 			expect(updates).toHaveLength(0);
 		});
@@ -74,19 +74,19 @@ describe("StatusesStore", () => {
 			store.subscribe((state) => updates.push(state));
 
 			expect(() =>
-				Reflect.apply(actions.addSelectedStatus, actions, [status]),
+				Reflect.apply(actions.addActiveStatuses, actions, [status]),
 			).toThrow(ZodError);
 			expect(store.getState()).toBe(initial);
 			expect(updates).toHaveLength(0);
 		},
 	);
 
-	test.each(["state", "selectedStatuses"] as const)(
+	test.each(["setState", "setActiveStatuses"] as const)(
 		"updates %s without changing earlier snapshots, unrelated state, or retaining input references",
 		(property) => {
 			const { store, actions } = createStatusesStore();
 			const initial = store.getState();
-			const selectedStatuses: Status[] = [
+			const activeStatuses: Status[] = [
 				"LABEL_CREATED",
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"EXCEPTION:DAMAGED_PACKAGE",
@@ -94,17 +94,18 @@ describe("StatusesStore", () => {
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
-			if (property === "state") {
-				actions.state = { selectedStatuses, dirty: false };
+			if (property === "setState") {
+				actions.setState({ activeStatuses, dirty: false });
 			} else {
-				actions.selectedStatuses = selectedStatuses;
+				actions.setActiveStatuses(activeStatuses);
 			}
 
-			expect(actions.state).toBe(store.getState().statuses);
-			expect(actions.selectedStatuses).toBe(
-				store.getState().statuses.selectedStatuses,
+			expect(actions.getState()).toBe(store.getState().statuses);
+			expect(actions.getActiveStatuses()).toBe(
+				store.getState().statuses.activeStatuses,
 			);
-			expect(actions.selectedStatuses).toEqual([
+			expectTypeOf(actions.getActiveStatuses()).toEqualTypeOf<Status[]>();
+			expect(actions.getActiveStatuses()).toEqual([
 				"LABEL_CREATED",
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"EXCEPTION:DAMAGED_PACKAGE",
@@ -114,7 +115,7 @@ describe("StatusesStore", () => {
 					...initial,
 					statuses: {
 						dirty: false,
-						selectedStatuses: [
+						activeStatuses: [
 							"LABEL_CREATED",
 							"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 							"EXCEPTION:DAMAGED_PACKAGE",
@@ -122,12 +123,12 @@ describe("StatusesStore", () => {
 					},
 				},
 			]);
-			expect(initial.statuses.selectedStatuses).toEqual([]);
+			expect(initial.statuses.activeStatuses).toEqual([]);
 			expect(store.getState().metrics).toBe(initial.metrics);
 			expect(store.getState().columns).toBe(initial.columns);
 
-			selectedStatuses.push("DELIVERED");
-			expect(actions.selectedStatuses).toEqual([
+			activeStatuses.push("DELIVERED");
+			expect(actions.getActiveStatuses()).toEqual([
 				"LABEL_CREATED",
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"EXCEPTION:DAMAGED_PACKAGE",
@@ -135,37 +136,37 @@ describe("StatusesStore", () => {
 		},
 	);
 
-	test.each(["state", "selectedStatuses"] as const)(
+	test.each(["setState", "setActiveStatuses"] as const)(
 		"clears selections through %s",
 		(property) => {
 			const { store, actions } = createStatusesStore();
-			actions.selectedStatuses = ["LABEL_CREATED"];
+			actions.setActiveStatuses(["LABEL_CREATED"]);
 			const initial = store.getState();
 			const updates: AppState[] = [];
 			store.subscribe((state) => updates.push(state));
 
-			if (property === "state") {
-				actions.state = { selectedStatuses: [], dirty: false };
+			if (property === "setState") {
+				actions.setState({ activeStatuses: [], dirty: false });
 			} else {
-				actions.selectedStatuses = [];
+				actions.setActiveStatuses([]);
 			}
 
-			expect(actions.selectedStatuses).toEqual([]);
-			expect(initial.statuses.selectedStatuses).toEqual(["LABEL_CREATED"]);
+			expect(actions.getActiveStatuses()).toEqual([]);
+			expect(initial.statuses.activeStatuses).toEqual(["LABEL_CREATED"]);
 			expect(updates).toHaveLength(1);
-			expect(updates[0]?.statuses.selectedStatuses).toEqual([]);
+			expect(updates[0]?.statuses.activeStatuses).toEqual([]);
 		},
 	);
 
 	test("preserves all children without implicitly selecting their parent", () => {
 		const { actions } = createStatusesStore();
-		actions.selectedStatuses = [
+		actions.setActiveStatuses([
 			"LABEL_CREATED:SHIPMENT_INFORMATION_RECEIVED_BY_CARRIER",
 			"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 			"LABEL_CREATED:LABEL_EXPIRING_SOON",
-		];
+		]);
 
-		expect(actions.selectedStatuses).toEqual([
+		expect(actions.getActiveStatuses()).toEqual([
 			"LABEL_CREATED:SHIPMENT_INFORMATION_RECEIVED_BY_CARRIER",
 			"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 			"LABEL_CREATED:LABEL_EXPIRING_SOON",
@@ -176,43 +177,43 @@ describe("StatusesStore", () => {
 		"leaves dirty=%s unchanged when selecting or clearing statuses",
 		(dirty) => {
 			const { store, actions } = createStatusesStore();
-			actions.state = { selectedStatuses: [], dirty };
+			actions.setState({ activeStatuses: [], dirty });
 			const initial = store.getState();
 
-			actions.selectedStatuses = ["LABEL_CREATED"];
-			expect(actions.state).toEqual({
-				selectedStatuses: ["LABEL_CREATED"],
+			actions.setActiveStatuses(["LABEL_CREATED"]);
+			expect(actions.getState()).toEqual({
+				activeStatuses: ["LABEL_CREATED"],
 				dirty,
 			});
 
-			actions.selectedStatuses = [];
-			expect(actions.state).toEqual({ selectedStatuses: [], dirty });
-			expect(initial.statuses).toEqual({ selectedStatuses: [], dirty });
+			actions.setActiveStatuses([]);
+			expect(actions.getState()).toEqual({ activeStatuses: [], dirty });
+			expect(initial.statuses).toEqual({ activeStatuses: [], dirty });
 		},
 	);
 
 	test("updates dirty through state replacement and notifies subscribers without changing selections", () => {
 		const { store, actions } = createStatusesStore();
-		actions.selectedStatuses = ["LABEL_CREATED"];
+		actions.setActiveStatuses(["LABEL_CREATED"]);
 		const initial = store.getState();
 		const updates: AppState[] = [];
 		store.subscribe((state) => updates.push(state));
 
-		actions.state = { selectedStatuses: ["LABEL_CREATED"], dirty: true };
+		actions.setState({ activeStatuses: ["LABEL_CREATED"], dirty: true });
 
-		expect(actions.state).toEqual({
-			selectedStatuses: ["LABEL_CREATED"],
+		expect(actions.getState()).toEqual({
+			activeStatuses: ["LABEL_CREATED"],
 			dirty: true,
 		});
 		expect(initial.statuses).toEqual({
-			selectedStatuses: ["LABEL_CREATED"],
+			activeStatuses: ["LABEL_CREATED"],
 			dirty: false,
 		});
 		expect(updates).toHaveLength(1);
 		expect(updates[0]?.statuses.dirty).toBe(true);
 
-		actions.state = { selectedStatuses: ["LABEL_CREATED"], dirty: false };
-		expect(actions.state.dirty).toBe(false);
+		actions.setState({ activeStatuses: ["LABEL_CREATED"], dirty: false });
+		expect(actions.getState().dirty).toBe(false);
 		expect(updates).toHaveLength(2);
 		expect(updates[1]?.statuses.dirty).toBe(false);
 	});
@@ -221,7 +222,7 @@ describe("StatusesStore", () => {
 		"rejects invalid dirty=%j without changing state or notifying subscribers",
 		(dirty) => {
 			const { store, actions } = createStatusesStore();
-			actions.state = { selectedStatuses: ["DELIVERED"], dirty: true };
+			actions.setState({ activeStatuses: ["DELIVERED"], dirty: true });
 			const initial = store.getState();
 			let notifications = 0;
 			store.subscribe(() => {
@@ -229,10 +230,12 @@ describe("StatusesStore", () => {
 			});
 
 			expect(() =>
-				Reflect.set(actions, "state", {
-					selectedStatuses: ["LABEL_CREATED"],
-					dirty,
-				}),
+				Reflect.apply(actions.setState, actions, [
+					{
+						activeStatuses: ["LABEL_CREATED"],
+						dirty,
+					},
+				]),
 			).toThrow(ZodError);
 
 			expect(store.getState()).toBe(initial);
@@ -242,20 +245,20 @@ describe("StatusesStore", () => {
 
 	test("allows every status to be selected without controller restrictions", () => {
 		const { actions } = createStatusesStore();
-		const selectedStatuses = [
+		const activeStatuses = [
 			...ParentStatusSchema.options,
 			...SubStatusSchema.options,
 		];
 
-		actions.selectedStatuses = selectedStatuses;
+		actions.setActiveStatuses(activeStatuses);
 
-		expect(actions.selectedStatuses).toEqual(selectedStatuses);
+		expect(actions.getActiveStatuses()).toEqual(activeStatuses);
 	});
 
-	test.each(["state", "selectedStatuses"] as const)(
+	test.each(["setState", "setActiveStatuses"] as const)(
 		"rejects invalid %s writes without changing state or notifying subscribers",
 		(property) => {
-			for (const selectedStatuses of [
+			for (const activeStatuses of [
 				null,
 				"LABEL_CREATED",
 				["UNKNOWN"],
@@ -263,18 +266,20 @@ describe("StatusesStore", () => {
 				[{ status: "LABEL_CREATED", selected: true }],
 			]) {
 				const { store, actions } = createStatusesStore();
-				actions.selectedStatuses = ["DELIVERED"];
+				actions.setActiveStatuses(["DELIVERED"]);
 				const initial = store.getState();
 				let notifications = 0;
 				store.subscribe(() => {
 					notifications += 1;
 				});
 				const value =
-					property === "state" ? { selectedStatuses } : selectedStatuses;
+					property === "setState" ? { activeStatuses } : activeStatuses;
 
-				expect(() => Reflect.set(actions, property, value)).toThrow(ZodError);
+				expect(() =>
+					Reflect.apply(actions[property], actions, [value]),
+				).toThrow(ZodError);
 				expect(store.getState()).toBe(initial);
-				expect(actions.selectedStatuses).toEqual(["DELIVERED"]);
+				expect(actions.getActiveStatuses()).toEqual(["DELIVERED"]);
 				expect(notifications).toBe(0);
 			}
 		},
@@ -286,7 +291,9 @@ describe("StatusesStore", () => {
 			const { store, actions } = createStatusesStore();
 			const initial = store.getState();
 
-			expect(() => Reflect.set(actions, "state", state)).toThrow(ZodError);
+			expect(() => Reflect.apply(actions.setState, actions, [state])).toThrow(
+				ZodError,
+			);
 			expect(store.getState()).toBe(initial);
 		},
 	);

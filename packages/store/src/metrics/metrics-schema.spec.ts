@@ -5,7 +5,7 @@ import {
 	MetricSchema,
 	MetricTypeSchema,
 	MetricValueSchema,
-} from "./metrics-schema";
+} from "../index";
 
 describe("MetricTypeSchema", () => {
 	test.each([

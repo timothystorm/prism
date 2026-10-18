@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-	ColumnNameSchema,
-	ColumnSchema,
-	ColumnsSchema,
-} from "./columns-schema";
+import { ColumnNameSchema, ColumnSchema, ColumnsSchema } from "../index";
 
 describe("ColumnNameSchema", () => {
 	test.each([

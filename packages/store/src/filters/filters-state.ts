@@ -2,11 +2,12 @@ import { z } from "zod";
 import { FilterSchema } from "./filters-schema";
 
 /**
- * Schema for the state of shipment filters. It includes an array of active filters and a dirty flag indicating whether the filters have been modified.
+ * Schema for active shipment filters with unique types and a controller-managed dirty flag.
+ * Selection updates preserve dirty; controllers decide when changes need distribution.
  *
  * @example
  * const filtersState: FiltersState = {
- *   active: [
+ *   activeFilters: [
  *     {
  *       type: "SHIPMENT:COMMIT_DATE",
  *       criteria: {
@@ -22,7 +23,7 @@ import { FilterSchema } from "./filters-schema";
  *       }
  *     },
  *     {
- *       type: "SHIPPER:NAME",
+ *       type: "SHIPMENT:SHIPPER_NAME",
  *       criteria: ["Acme Corp", "Globex Inc."]
  *     }
  *   ],
@@ -30,7 +31,7 @@ import { FilterSchema } from "./filters-schema";
  * };
  */
 export const FilterStateSchema = z.object({
-	active: z
+	activeFilters: z
 		.array(FilterSchema)
 		.refine(
 			(filters) =>
@@ -43,6 +44,6 @@ export const FilterStateSchema = z.object({
 export type FiltersState = z.infer<typeof FilterStateSchema>;
 
 export const initialFiltersState: FiltersState = {
-	active: [],
+	activeFilters: [],
 	dirty: false,
 };
