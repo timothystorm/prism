@@ -2,18 +2,21 @@ import { z } from "zod";
 import { ColumnsSchema } from "./columns-schema";
 
 /**
- * Schema for the columns state.
+ * Schema for active columns and a controller-managed dirty flag.
+ * The flag can track changes awaiting distribution; column updates do not toggle it.
  *
  * @example
  * const columnsState: ColumnsState = {
- *   selectedColumns: [
+ *   activeColumns: [
  *     { name: "TRACKING_ID" },
  *     { name: "EST_DELIVERY", sortDirection: "desc" }
- *   ]
+ *   ],
+ *   dirty: false
  * };
  */
 export const ColumnsStateSchema = z.object({
-	selectedColumns: ColumnsSchema,
+	activeColumns: ColumnsSchema,
+	dirty: z.boolean().default(false),
 });
 
 /**
@@ -25,9 +28,10 @@ export type ColumnsState = z.infer<typeof ColumnsStateSchema>;
  * Initial state for columns.
  */
 export const initialColumnsState: ColumnsState = {
-	selectedColumns: [
+	activeColumns: [
 		{ name: "TRACKING_ID" },
 		{ name: "STATUS" },
 		{ name: "EST_DELIVERY" },
 	],
+	dirty: false,
 };

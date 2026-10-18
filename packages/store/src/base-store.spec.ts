@@ -20,21 +20,21 @@ describe("BaseStore", () => {
 	test("replaces only its slice, validates input, and preserves earlier snapshots", () => {
 		const { store, actions } = createTestStore();
 		const initial = store.getState();
-		const input = { selectedStatuses: ["LABEL_CREATED"] as const, dirty: true };
+		const input = { activeStatuses: ["LABEL_CREATED"] as const, dirty: true };
 		const updates: AppState[] = [];
 		store.subscribe((state) => updates.push(state));
 
-		actions.state = {
-			selectedStatuses: [...input.selectedStatuses],
+		actions.setState({
+			activeStatuses: [...input.activeStatuses],
 			dirty: input.dirty,
-		};
+		});
 
-		expect(actions.state).toBe(store.getState().statuses);
-		expect(actions.state).toEqual({
-			selectedStatuses: ["LABEL_CREATED"],
+		expect(actions.getState()).toBe(store.getState().statuses);
+		expect(actions.getState()).toEqual({
+			activeStatuses: ["LABEL_CREATED"],
 			dirty: true,
 		});
-		expect(initial.statuses).toEqual({ selectedStatuses: [], dirty: false });
+		expect(initial.statuses).toEqual({ activeStatuses: [], dirty: false });
 		expect(store.getState().columns).toBe(initial.columns);
 		expect(store.getState().metrics).toBe(initial.metrics);
 		expect(store.getState().filters).toBe(initial.filters);
@@ -44,20 +44,20 @@ describe("BaseStore", () => {
 	test("stores parsed slice values without retaining caller-owned arrays", () => {
 		const { actions } = createTestStore();
 		const input: AppState["statuses"] = {
-			selectedStatuses: ["LABEL_CREATED"],
+			activeStatuses: ["LABEL_CREATED"],
 			dirty: false,
 		};
 
-		actions.state = input;
-		input.selectedStatuses.push("DELIVERED");
+		actions.setState(input);
+		input.activeStatuses.push("DELIVERED");
 
-		expect(actions.state.selectedStatuses).toEqual(["LABEL_CREATED"]);
-		expect(actions.state.dirty).toBe(false);
+		expect(actions.getState().activeStatuses).toEqual(["LABEL_CREATED"]);
+		expect(actions.getState().dirty).toBe(false);
 	});
 
 	test.each([
-		{ selectedStatuses: ["UNKNOWN"], dirty: true },
-		{ selectedStatuses: [], dirty: "true" },
+		{ activeStatuses: ["UNKNOWN"], dirty: true },
+		{ activeStatuses: [], dirty: "true" },
 	])("rejects invalid slice replacement without notifications: %j", (input) => {
 		const { store, actions } = createTestStore();
 		const initial = store.getState();
@@ -66,7 +66,9 @@ describe("BaseStore", () => {
 			notifications += 1;
 		});
 
-		expect(() => Reflect.set(actions, "state", input)).toThrow(ZodError);
+		expect(() => Reflect.apply(actions.setState, actions, [input])).toThrow(
+			ZodError,
+		);
 
 		expect(store.getState()).toBe(initial);
 		expect(notifications).toBe(0);

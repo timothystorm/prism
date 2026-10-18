@@ -5,55 +5,57 @@ import type { MetricType } from "./metrics-schema";
 import { MetricsStateSchema } from "./metrics-state";
 
 /**
- * A class that provides actions to manipulate the metrics state in the application.
- *
- * This should only manage state and not contain any business logic. It is designed to be used with a state management
- * library like Zustand but should not be tied to any specific implementation - no Zustand types should be used here.
+ * Provides validated, immutable access to the active metric and metrics selected for display in the current view.
+ * The two selections are independent: selecting metrics for display does not activate them.
+ * Controllers manage business workflows and dirty flags.
  */
 export class MetricsStore extends BaseStore<"metrics"> {
 	protected readonly sliceKey = "metrics";
 	protected readonly stateSchema = MetricsStateSchema;
 
 	/**
-	 * @return The currently focused metric, or null if none is focused.
+	 * @return The currently active metric, or null if none is active.
 	 */
-	get focusedMetric(): MetricType | null {
-		return this.state?.focusedMetric ?? null;
+	getActiveMetric(): MetricType | null {
+		return this.getState().activeMetric;
 	}
 
 	/**
-	 * Sets the currently tracked metric. If the input is null, it clears the tracked metric.
+	 * Sets the currently active metric. If the input is null, it clears the activation.
+	 * Preserves the dirty flag; controllers manage it through setState().
 	 *
-	 * @param metric The metric to set as tracked, or null to clear the tracked metric.
+	 * @param metric The metric to activate, or null to clear the activation.
 	 * @throws ZodError If the metric is invalid. The state remains unchanged.
 	 */
-	set focusedMetric(metric: MetricType | null) {
-		const validated = MetricsStateSchema.shape.focusedMetric.parse(metric);
-		this.setState(
+	setActiveMetric(metric: MetricType | null): void {
+		const validated = MetricsStateSchema.shape.activeMetric.parse(metric);
+		this.setAppState(
 			produce<AppState>((state) => {
-				state.metrics.focusedMetric = validated;
+				state.metrics.activeMetric = validated;
 			}),
 		);
 	}
 
 	/**
-	 * @return The currently tracked metrics, or an empty array if none are tracked.
+	 * @return The metrics selected for display in this view, in display order, or an empty array if none are selected.
 	 */
-	get trackedMetrics(): MetricType[] {
-		return this.state?.trackedMetrics ?? [];
+	getSelectedMetrics(): MetricType[] {
+		return this.getState().selectedMetrics;
 	}
 
 	/**
-	 * Sets the currently tracked metrics.
+	 * Replaces the metrics selected for display in this view, preserving the supplied order.
+	 * An empty array clears the selection.
+	 * Preserves the dirty flag; controllers manage it through setState().
 	 *
-	 * @param metric The metrics to set as tracked.
+	 * @param metrics Unique metric identifiers selected for display, in order.
 	 * @throws ZodError If the selections are invalid. The state remains unchanged.
 	 */
-	set trackedMetrics(metric: MetricType[]) {
-		const validated = MetricsStateSchema.shape.trackedMetrics.parse(metric);
-		this.setState(
+	setSelectedMetrics(metrics: MetricType[]): void {
+		const validated = MetricsStateSchema.shape.selectedMetrics.parse(metrics);
+		this.setAppState(
 			produce<AppState>((state) => {
-				state.metrics.trackedMetrics = validated;
+				state.metrics.selectedMetrics = validated;
 			}),
 		);
 	}

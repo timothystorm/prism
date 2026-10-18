@@ -1,53 +1,52 @@
-import equal from "fast-deep-equal";
 import { produce } from "immer";
 import type { z } from "zod";
 import type { AppState } from "../app-state";
 import { BaseStore } from "../base-store";
-import { type Filter, FilterSchema } from "./filters-schema";
+import type { Filter, FilterSchema } from "./filters-schema";
 import { FilterStateSchema } from "./filters-state";
 
+/**
+ * Provides validated, immutable access to active shipment filters, with one entry per filter type.
+ * Use getActiveFilters() to read the ordered selection and setActiveFilters() to replace it.
+ * An empty array clears the selection. Use getState()/setState() to read or replace the full slice,
+ * including its controller-managed dirty flag.
+ *
+ * Filter actions preserve the dirty flag. Controllers manage dirty status, timezone conversion,
+ * and date-boundary normalization; the store retains supplied UTC ISO date strings unchanged.
+ * Returned selections are store-owned snapshots and must not be mutated directly.
+ *
+ * @example
+ * ```typescript
+ * appStore.filters.setActiveFilters([
+ *   { type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "DELAYED" },
+ * ]);
+ * const activeFilters = appStore.filters.getActiveFilters();
+ * appStore.filters.setActiveFilters([]);
+ * ```
+ */
 export class FilterStore extends BaseStore<"filters"> {
 	protected readonly sliceKey = "filters";
 	protected readonly stateSchema = FilterStateSchema;
 
-	/**
-	 * Adds a filter or replaces its criteria in place without changing the dirty flag.
-	 * Equivalent parsed criteria leave state and subscriptions unchanged.
-	 * Date criteria are UTC ISO strings, stored without conversion or normalization.
-	 * Controllers are responsible for timezone conversion and day-boundary rules.
-	 */
-	addActiveFilter(filter: z.input<typeof FilterSchema>): Filter[] {
-		const validated = FilterSchema.parse(filter);
-		this.setState(
-			produce<AppState>((state) => {
-				const index = state.filters.active.findIndex(
-					(active) => active.type === validated.type,
-				);
-				const existing = state.filters.active[index];
-				if (existing && equal(existing.criteria, validated.criteria)) return; // No change, so don't update state
-				if (index === -1) state.filters.active.push(validated);
-				else state.filters.active[index] = validated;
-			}),
-		);
-		return this.state.active;
+	/** @return The active filters in selection order, or an empty array if none are selected. */
+	getActiveFilters(): Filter[] {
+		return this.getState().activeFilters;
 	}
 
 	/**
-	 * Removes a filter by type without changing the dirty flag.
-	 * Missing types leave state and subscriptions unchanged.
-	 * @return The remaining active filters.
+	 * Validates and replaces the entire active-filter list without changing the dirty flag.
+	 * An empty array clears the selection. Parsing detaches input data and applies schema defaults.
+	 * Replacements create new references even when their contents are equal.
+	 *
+	 * @param filters The complete replacement list, with unique filter types.
+	 * @throws ZodError If the list is invalid. The state remains unchanged.
 	 */
-	removeActiveFilter(filterType: string): Filter[] {
-		this.setState(
+	setActiveFilters(filters: z.input<typeof FilterSchema>[]): void {
+		const validated = FilterStateSchema.shape.activeFilters.parse(filters);
+		this.setAppState(
 			produce<AppState>((state) => {
-				const index = state.filters.active.findIndex(
-					(active) => active.type === filterType,
-				);
-				if (index !== -1) {
-					state.filters.active.splice(index, 1);
-				}
+				state.filters.activeFilters = validated;
 			}),
 		);
-		return this.state.active;
 	}
 }

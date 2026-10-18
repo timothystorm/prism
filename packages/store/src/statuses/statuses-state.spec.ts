@@ -4,22 +4,22 @@ import { initialStatusesState, StatusesStateSchema } from "./statuses-state";
 
 describe("StatusesStateSchema", () => {
 	test("allows no selections as an empty array", () => {
-		expect(StatusesStateSchema.parse({ selectedStatuses: [] })).toEqual({
-			selectedStatuses: [],
+		expect(StatusesStateSchema.parse({ activeStatuses: [] })).toEqual({
+			activeStatuses: [],
 			dirty: false,
 		});
 	});
 
 	test.each([
-		{ selectedStatuses: ["LABEL_CREATED"] },
+		{ activeStatuses: ["LABEL_CREATED"] },
 		{
-			selectedStatuses: [
+			activeStatuses: [
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"EXCEPTION:DAMAGED_PACKAGE",
 			],
 		},
 		{
-			selectedStatuses: [
+			activeStatuses: [
 				"LABEL_CREATED",
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"EXCEPTION",
@@ -27,7 +27,7 @@ describe("StatusesStateSchema", () => {
 			],
 		},
 		{
-			selectedStatuses: [
+			activeStatuses: [
 				"LABEL_CREATED:SHIPMENT_INFORMATION_RECEIVED_BY_CARRIER",
 				"LABEL_CREATED:WAITING_FOR_CARRIER_PICKUP",
 				"LABEL_CREATED:LABEL_EXPIRING_SOON",
@@ -45,7 +45,7 @@ describe("StatusesStateSchema", () => {
 
 	test("allows every parent and child to be selected together", () => {
 		const state = {
-			selectedStatuses: [
+			activeStatuses: [
 				...ParentStatusSchema.options,
 				...SubStatusSchema.options,
 			],
@@ -60,16 +60,16 @@ describe("StatusesStateSchema", () => {
 	test.each([true, false])(
 		"preserves explicitly supplied dirty=%s",
 		(dirty) => {
-			const state = { selectedStatuses: ["LABEL_CREATED"], dirty };
+			const state = { activeStatuses: ["LABEL_CREATED"], dirty };
 			expect(StatusesStateSchema.parse(state)).toEqual(state);
 		},
 	);
 
 	test("defaults undefined dirty to false without modifying input", () => {
-		const state = { selectedStatuses: ["LABEL_CREATED"], dirty: undefined };
+		const state = { activeStatuses: ["LABEL_CREATED"], dirty: undefined };
 
 		expect(StatusesStateSchema.parse(state)).toEqual({
-			selectedStatuses: ["LABEL_CREATED"],
+			activeStatuses: ["LABEL_CREATED"],
 			dirty: false,
 		});
 		expect(state.dirty).toBeUndefined();
@@ -79,7 +79,7 @@ describe("StatusesStateSchema", () => {
 		"rejects non-boolean dirty values: %j",
 		(dirty) => {
 			const result = StatusesStateSchema.safeParse({
-				selectedStatuses: [],
+				activeStatuses: [],
 				dirty,
 			});
 
@@ -96,18 +96,18 @@ describe("StatusesStateSchema", () => {
 
 	test.each([
 		{},
-		{ selectedStatuses: null },
-		{ selectedStatuses: "LABEL_CREATED" },
-		{ selectedStatuses: ["UNKNOWN"] },
-		{ selectedStatuses: ["LABEL_CREATED", "EXCEPTION:LABEL_EXPIRED"] },
-		{ selectedStatuses: [{ status: "LABEL_CREATED", selected: true }] },
+		{ activeStatuses: null },
+		{ activeStatuses: "LABEL_CREATED" },
+		{ activeStatuses: ["UNKNOWN"] },
+		{ activeStatuses: ["LABEL_CREATED", "EXCEPTION:LABEL_EXPIRED"] },
+		{ activeStatuses: [{ status: "LABEL_CREATED", selected: true }] },
 	])("rejects invalid selections: %j", (state) => {
 		expect(StatusesStateSchema.safeParse(state).success).toBe(false);
 	});
 
 	test("starts with no statuses selected", () => {
 		expect(StatusesStateSchema.parse(initialStatusesState)).toEqual({
-			selectedStatuses: [],
+			activeStatuses: [],
 			dirty: false,
 		});
 	});

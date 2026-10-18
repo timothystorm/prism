@@ -1,0 +1,38 @@
+{
+	"name": "@fedex/prism-controller",
+	"version": "1.0.0",
+	"description": "Prism application store and state schemas",
+	"keywords": [],
+	"author": "Timothy Storm <timothystorm@gmail.com>",
+	"license": "UNLICENSED",
+	"type": "module",
+	"main": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"scripts": {
+		"build": "tsdown",
+		"compile": "pnpm tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"test": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test",
+		"watch": "vitest --watch"
+	},
+	"dependencies": {
+		"@fedex/prism-store": "workspace:*",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"tsdown": "^0.23.1"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs"
+		}
+	},
+	"files": [
+		"dist"
+	]
+}

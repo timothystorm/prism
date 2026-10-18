@@ -1,17 +1,18 @@
 import { describe, expect, test } from "vitest";
-import { FilterStateSchema, initialFiltersState } from "./filters-state";
+import { FilterStateSchema } from "../index";
+import { initialFiltersState } from "./filters-state";
 
 describe("FilterStateSchema", () => {
 	test("defaults dirty to false without changing filter order", () => {
 		expect(
 			FilterStateSchema.parse({
-				active: [
+				activeFilters: [
 					{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
 					{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
 				],
 			}),
 		).toEqual({
-			active: [
+			activeFilters: [
 				{ type: "SHIPMENT:INVOICE_NUMBER", criteria: ["INV-1"] },
 				{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
 			],
@@ -20,8 +21,8 @@ describe("FilterStateSchema", () => {
 	});
 
 	test.each([false, true])("preserves explicit dirty=%s", (dirty) => {
-		expect(FilterStateSchema.parse({ active: [], dirty })).toEqual({
-			active: [],
+		expect(FilterStateSchema.parse({ activeFilters: [], dirty })).toEqual({
+			activeFilters: [],
 			dirty,
 		});
 	});
@@ -31,7 +32,7 @@ describe("FilterStateSchema", () => {
 		(criteria) => {
 			expect(
 				FilterStateSchema.safeParse({
-					active: [
+					activeFilters: [
 						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria: "ON_TIME" },
 						{ type: "SHIPMENT:DELIVERY_PREDICTION", criteria },
 					],
@@ -55,7 +56,7 @@ describe("FilterStateSchema", () => {
 
 	test("starts with no active filters and a clean flag", () => {
 		expect(FilterStateSchema.parse(initialFiltersState)).toEqual({
-			active: [],
+			activeFilters: [],
 			dirty: false,
 		});
 	});

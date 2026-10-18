@@ -4,7 +4,7 @@ import { BaseStore } from "../base-store";
 import { AccountsStateSchema } from "./accounts-state";
 
 /**
- * Provides validated, immutable access to the active accounts selection.
+ * Provides validated, immutable access to the active accounts' selection.
  * Stores only selection state, without accounts-loading or filtering business logic.
  */
 export class AccountsStore extends BaseStore<"account"> {
@@ -12,8 +12,8 @@ export class AccountsStore extends BaseStore<"account"> {
 	protected readonly stateSchema = AccountsStateSchema;
 
 	/** @return The selected accounts identifiers, or an empty array if none are selected. */
-	get activeAccounts(): string[] {
-		return this.state.active;
+	getActiveAccounts(): string[] {
+		return this.getState().activeAccounts;
 	}
 
 	/**
@@ -23,11 +23,11 @@ export class AccountsStore extends BaseStore<"account"> {
 	 * @param accounts Unique, non-empty accounts identifiers to select.
 	 * @throws ZodError If the selection is invalid. The state remains unchanged.
 	 */
-	set activeAccounts(accounts: string[]) {
-		const validated = AccountsStateSchema.shape.active.parse(accounts);
-		this.setState(
+	setActiveAccounts(accounts: string[]): void {
+		const validated = AccountsStateSchema.shape.activeAccounts.parse(accounts);
+		this.setAppState(
 			produce<AppState>((state) => {
-				state.account.active = validated;
+				state.account.activeAccounts = validated;
 			}),
 		);
 	}

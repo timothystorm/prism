@@ -1,11 +1,10 @@
 import { z } from "zod";
 
 /**
- * Schema for the metrics state.
+ * Schema for built-in metric identifiers.
  *
  * @example
- * const metric: Metric = "EXCEPTIONS"; // Built-in metric
- * const customMetric: Metric = "CUSTOM:MY_CUSTOM_METRIC"; // Custom metric
+ * const metric: MetricType = "EXCEPTION";
  */
 export const BuiltInMetricTypeSchema = z.enum([
 	"ACTIVE_SHIPMENTS",
@@ -26,6 +25,12 @@ export const BuiltInMetricTypeSchema = z.enum([
 	"WATCH_LIST",
 	"WE_TRIED_TO_DELIVER",
 ]);
+/**
+ * Schema for custom metric identifiers prefixed with CUSTOM:.
+ *
+ * @example
+ * const customMetric: MetricType = "CUSTOM:MY_CUSTOM_METRIC";
+ */
 export const CustomMetricTypeSchema = z.templateLiteral([
 	"CUSTOM:",
 	z.string(),
@@ -43,13 +48,19 @@ export const MetricValueSchema = z.union([
 	z.boolean(),
 ]);
 
+/**
+ * Schema for a metric and its optional value, separate from metric selection state.
+ *
+ * @example
+ * const metric: Metric = { type: "EXCEPTION", value: 42 };
+ */
 export const MetricSchema = z.object({
 	type: MetricTypeSchema,
 	value: MetricValueSchema.nullish(),
 });
 
 /**
- * Types for metrics state.
+ * Types for metric identifiers and values.
  */
 export type MetricType = z.infer<typeof MetricTypeSchema>;
 export type MetricValue = z.infer<typeof MetricValueSchema>;
