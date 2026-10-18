@@ -1,14 +1,16 @@
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
+import { shallow } from "zustand/vanilla/shallow";
 import { AccountsStore } from "./accounts/accounts-store";
 import { type AppState, AppStateSchema, initialAppState } from "./app-state";
 import { ColumnsStore } from "./columns/columns-store";
 import { FilterStore } from "./filters/filter-store";
 import { MetricsStore } from "./metrics/metrics-store";
 import { StatusesStore } from "./statuses/statuses-store";
+import { ViewsStore } from "./views/views-store";
 
 /**
- * A state that holds the application state and provides methods to access and update it.
+ * A state that holds the application state and provides methods to access and update that state.
  */
 export class AppStore {
 	private readonly _account: AccountsStore;
@@ -16,6 +18,7 @@ export class AppStore {
 	private readonly _columns: ColumnsStore;
 	private readonly _statuses: StatusesStore;
 	private readonly _filters: FilterStore;
+	private readonly _views: ViewsStore;
 	private readonly _store = createStore<AppState>()(
 		subscribeWithSelector(() => initialAppState),
 	);
@@ -41,6 +44,7 @@ export class AppStore {
 		);
 
 		this._filters = new FilterStore(this._store.getState, this._store.setState);
+		this._views = new ViewsStore(this._store.getState, this._store.setState);
 	}
 
 	/**
@@ -94,18 +98,31 @@ export class AppStore {
 		return this._statuses;
 	}
 
-	/** @return The store of accounts identifiers currently in focus. */
+	/**
+	 * @return The store of accounts identifiers currently in focus.
+	 */
 	get account(): AccountsStore {
 		return this._account;
 	}
 
+	/**
+	 * @return The store of filters currently in focus.
+	 */
 	get filters(): FilterStore {
 		return this._filters;
 	}
 
 	/**
-	 * Subscribes to changes in the application state based on a selector function. The listener will be called whenever
-	 * the selected value changes.
+	 * @return The store of custom view metadata and the current view identifier.
+	 */
+	get views(): ViewsStore {
+		return this._views;
+	}
+
+	/**
+	 * Subscribes to one selected value, comparing results with Object.is.
+	 * The listener receives current and previous values only after a change, not on registration.
+	 * Selectors should be pure; allocating a new result object counts as a change.
 	 *
 	 * @example
 	 * ```typescript
@@ -115,14 +132,71 @@ export class AppStore {
 	 *     console.log('Focused metric changed from', previousValue, 'to', newValue);
 	 *   }
 	 * );
+	 * ```
 	 *
 	 * @param selector A function that selects a part of the application state to listen to.
 	 * @param listener A function that will be called with the new and previous values of the selected state whenever it changes.
+	 * @return A function that unsubscribes this listener.
 	 */
 	subscribe<T>(
 		selector: (state: AppState) => T,
 		listener: (value: T, previousValue: T) => void,
+	): () => void;
+
+	/**
+	 * Subscribes to a non-empty tuple of selectors with positionally inferred results.
+	 * Compares each selected result with Object.is, not deep equality. The listener receives
+	 * complete current and previous tuples once per store update when any result changes.
+	 * Does not notify on registration or batch separate updates.
+	 *
+	 * Selectors should be pure; allocating a new result object counts as a change.
+	 * Inline selector arrays infer tuples automatically. Preserve named arrays as tuples,
+	 * for example with `as const`. The selector list is copied on registration.
+	 *
+	 * @example
+	 * ```typescript
+	 * const unsubscribe = appStore.subscribe(
+	 *   [
+	 *     (state) => state.columns,
+	 *     (state) => state.filters.active,
+	 *     (state) => state.account,
+	 *   ],
+	 *   ([columns, filters, account], [previousColumns, previousFilters, previousAccount]) => {
+	 *     console.log(columns, filters, account);
+	 *     console.log(previousColumns, previousFilters, previousAccount);
+	 *   },
+	 * );
+	 * ```
+	 *
+	 * @param selectors One or more selector functions, in listener tuple order.
+	 * @param listener Receives the current and previous selected tuples.
+	 * @return A function that unsubscribes this listener.
+	 * @throws TypeError If an empty selector list bypasses static typing.
+	 */
+	subscribe<Values extends [unknown, ...unknown[]]>(
+		selectors: readonly [
+			...{ [K in keyof Values]: (state: AppState) => Values[K] },
+		],
+		listener: (value: Values, previousValue: Values) => void,
+	): () => void;
+	subscribe<T>(
+		selector:
+			| ((state: AppState) => T)
+			| readonly ((state: AppState) => unknown)[],
+		listener: (value: T, previousValue: T) => void,
 	): () => void {
-		return this._store.subscribe(selector, listener);
+		if (typeof selector === "function") {
+			return this._store.subscribe(selector, listener);
+		}
+		if (selector.length === 0) {
+			throw new TypeError("At least one selector is required");
+		}
+		const selectors = [...selector];
+		return this._store.subscribe(
+			// Mapping preserves the tuple order and result types declared by the overload.
+			(state) => selectors.map((select) => select(state)) as T,
+			listener,
+			{ equalityFn: shallow },
+		);
 	}
 }

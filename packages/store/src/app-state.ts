@@ -19,6 +19,7 @@ import {
 	initialStatusesState,
 	StatusesStateSchema,
 } from "./statuses/statuses-state";
+import { initialViewsState, ViewsStateSchema } from "./views/views-state";
 
 /**
  * Schema for the entire application state.
@@ -29,6 +30,7 @@ export const AppStateSchema = z.object({
 	columns: ColumnsStateSchema,
 	statuses: StatusesStateSchema,
 	filters: FilterStateSchema,
+	views: ViewsStateSchema,
 });
 
 /**
@@ -45,4 +47,5 @@ export const initialAppState: AppState = {
 	columns: initialColumnsState,
 	statuses: initialStatusesState,
 	filters: initialFiltersState,
+	views: initialViewsState,
 };
