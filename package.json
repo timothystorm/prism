@@ -1,35 +1,37 @@
 {
-	"name": "@fedex/prism",
-	"version": "1.0.0",
-	"description": "",
-	"keywords": [],
-	"author": "Timothy Storm <timothystorm@gmail.com>",
-	"license": "UNLICENSED",
-	"private": true,
-	"scripts": {
-		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
-		"prepare": "husky",
-		"test": "vitest --run",
-		"test:coverage": "vitest run --coverage",
-		"typecheck": "pnpm -r --if-present typecheck",
-		"verify": "pnpm run lint && pnpm run typecheck && pnpm run test",
-		"watch": "vitest --watch"
-	},
-	"devEngines": {
-		"packageManager": {
-			"name": "pnpm",
-			"version": "12.11.2",
-			"onFail": "download"
-		}
-	},
-	"packageManager": "pnpm@12.11.2",
-	"type": "module",
-	"devDependencies": {
-		"@biomejs/biome": "^2.5.15",
-		"@vitest/coverage-v8": "5.0.3",
-		"husky": "^9.1.7",
-		"typescript": "^6.0.3",
-		"vitest": "^5.0.3"
-	}
+  "name": "@fedex/prism",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "Timothy Storm <timothystorm@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "check": "biome check .",
+    "check:ci": "biome ci .",
+    "check:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "prepare": "husky",
+    "test": "vitest --run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "verify": "pnpm run check && pnpm run typecheck && pnpm run test:coverage",
+    "watch": "vitest --watch"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.11.2",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.11.2",
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@vitest/coverage-v8": "5.0.3",
+    "husky": "^9.1.7",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
 }

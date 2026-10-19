@@ -12,8 +12,8 @@ export const DEFAULT_VIEW_ID = "default";
  * const view: View = { id: "view-1", name: "My view" };
  */
 export const ViewSchema = z.object({
-	id: z.string().min(1),
-	name: z.string().min(1),
+  id: z.string().min(1),
+  name: z.string().min(1),
 });
 
 /**

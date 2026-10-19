@@ -17,17 +17,17 @@ import { StatusSchema } from "./statuses-schema";
  * };
  */
 export const StatusesStateSchema = z.object({
-	activeStatuses: z
-		.array(StatusSchema)
-		.refine((statuses) => new Set(statuses).size === statuses.length, {
-			message: "Statuses must be unique",
-		}),
-	dirty: z.boolean().default(false),
+  activeStatuses: z
+    .array(StatusSchema)
+    .refine((statuses) => new Set(statuses).size === statuses.length, {
+      message: "Statuses must be unique",
+    }),
+  dirty: z.boolean().default(false),
 });
 
 export type StatusesState = z.infer<typeof StatusesStateSchema>;
 
 export const initialStatusesState: StatusesState = {
-	activeStatuses: [],
-	dirty: false,
+  activeStatuses: [],
+  dirty: false,
 };

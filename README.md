@@ -18,12 +18,12 @@ pnpm install
 
 Run the following commands from the repository root.
 
-## Verify
+## Check
 
 Run lint, typechecking, and tests:
 
 ```sh
-pnpm verify
+pnpm Check
 ```
 
 `pnpm install` activates Husky through the `prepare` script. Before each commit,

@@ -15,8 +15,8 @@ import { ColumnsSchema } from "./columns-schema";
  * };
  */
 export const ColumnsStateSchema = z.object({
-	activeColumns: ColumnsSchema,
-	dirty: z.boolean().default(false),
+  activeColumns: ColumnsSchema,
+  dirty: z.boolean().default(false),
 });
 
 /**
@@ -28,10 +28,6 @@ export type ColumnsState = z.infer<typeof ColumnsStateSchema>;
  * Initial state for columns.
  */
 export const initialColumnsState: ColumnsState = {
-	activeColumns: [
-		{ name: "TRACKING_ID" },
-		{ name: "STATUS" },
-		{ name: "EST_DELIVERY" },
-	],
-	dirty: false,
+  activeColumns: [{ name: "TRACKING_ID" }, { name: "STATUS" }, { name: "EST_DELIVERY" }],
+  dirty: false,
 };

@@ -1,12 +1,12 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	test: {
-		coverage: {
-			provider: "v8",
-			include: ["packages/*/src/**/*.ts"],
-			exclude: ["**/*.spec.ts"],
-			reporter: ["text", "html", "json-summary"],
-		},
-	},
+  test: {
+    coverage: {
+      provider: "v8",
+      include: ["packages/*/src/**/*.ts"],
+      exclude: ["**/*.spec.ts"],
+      reporter: ["text", "html", "json-summary"],
+    },
+  },
 });

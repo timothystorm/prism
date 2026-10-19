@@ -15,9 +15,9 @@ import { SearchCategorySchema } from "./search-schema";
  * };
  */
 export const SearchStateSchema = z.object({
-	query: z.string().default(""),
-	category: SearchCategorySchema.default("TRACKING_NUMBER"),
-	dirty: z.boolean().default(false),
+  query: z.string().default(""),
+  category: SearchCategorySchema.default("TRACKING_NUMBER"),
+  dirty: z.boolean().default(false),
 });
 
 /** The current search selection and controller-managed dirty status. */
@@ -25,7 +25,7 @@ export type SearchState = z.infer<typeof SearchStateSchema>;
 
 /** Initial empty tracking-number search with dirty=false. */
 export const initialSearchState: SearchState = {
-	query: "",
-	category: "TRACKING_NUMBER",
-	dirty: false,
+  query: "",
+  category: "TRACKING_NUMBER",
+  dirty: false,
 };
