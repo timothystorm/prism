@@ -5,8 +5,8 @@ import { z } from "zod";
  * Time zone offsets and fractional seconds are not accepted.
  */
 export const TimeOnlySchema = z.union([
-	z.iso.time({ precision: -1 }),
-	z.iso.time({ precision: 0 }),
+  z.iso.time({ precision: -1 }),
+  z.iso.time({ precision: 0 }),
 ]);
 
 /**
@@ -21,21 +21,21 @@ export const TimeOnlySchema = z.union([
  * });
  */
 export const TimeRangeSchema = z
-	.object({
-		start: TimeOnlySchema,
-		end: TimeOnlySchema,
-	})
-	.refine(
-		({ start, end }) => {
-			const startWithSeconds = start.length === 5 ? `${start}:00` : start;
-			const endWithSeconds = end.length === 5 ? `${end}:00` : end;
-			return startWithSeconds < endWithSeconds;
-		},
-		{
-			message: "[start] time must be before [end] time",
-			path: ["end"],
-		},
-	);
+  .object({
+    start: TimeOnlySchema,
+    end: TimeOnlySchema,
+  })
+  .refine(
+    ({ start, end }) => {
+      const startWithSeconds = start.length === 5 ? `${start}:00` : start;
+      const endWithSeconds = end.length === 5 ? `${end}:00` : end;
+      return startWithSeconds < endWithSeconds;
+    },
+    {
+      message: "[start] time must be before [end] time",
+      path: ["end"],
+    },
+  );
 
 /**
  * Types for time-only ranges.

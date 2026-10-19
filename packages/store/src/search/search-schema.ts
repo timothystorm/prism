@@ -5,9 +5,9 @@ import { z } from "zod";
  * Category-specific query formats and search execution are controller responsibilities.
  */
 export const SearchCategorySchema = z.enum([
-	"TRACKING_NUMBER",
-	"SHIPPER_REFERENCE",
-	"DESTINATION_CITY",
+  "TRACKING_NUMBER",
+  "SHIPPER_REFERENCE",
+  "DESTINATION_CITY",
 ]);
 
 /** A supported search category. */
@@ -25,8 +25,8 @@ export type SearchCategory = z.infer<typeof SearchCategorySchema>;
  * };
  */
 export const SearchSchema = z.object({
-	query: z.string(),
-	category: SearchCategorySchema,
+  query: z.string(),
+  category: SearchCategorySchema,
 });
 
 /** A complete search selection, without its dirty flag. */

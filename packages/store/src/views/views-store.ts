@@ -9,29 +9,29 @@ import { ViewsStateSchema } from "./views-state";
  * No state-management-library types are required.
  */
 export class ViewsStore extends BaseStore<"views"> {
-	protected readonly sliceKey = "views";
-	protected readonly stateSchema = ViewsStateSchema;
+  protected readonly sliceKey = "views";
+  protected readonly stateSchema = ViewsStateSchema;
 
-	/** @return The active view identifier. */
-	getActiveView(): string {
-		return this.getState().activeView;
-	}
+  /** @return The active view identifier. */
+  getActiveView(): string {
+    return this.getState().activeView;
+  }
 
-	/**
-	 * Sets the active view identifier without changing the dirty flag or other selections.
-	 *
-	 * @param id A non-empty view identifier. View availability is managed outside the store.
-	 * @throws ZodError If the identifier is invalid. The state remains unchanged.
-	 */
-	setActiveView(id: string): void {
-		const validated = ViewsStateSchema.parse({
-			...this.getState(),
-			activeView: id,
-		});
-		this.setAppState(
-			produce<AppState>((state) => {
-				state.views.activeView = validated.activeView;
-			}),
-		);
-	}
+  /**
+   * Sets the active view identifier without changing the dirty flag or other selections.
+   *
+   * @param id A non-empty view identifier. View availability is managed outside the store.
+   * @throws ZodError If the identifier is invalid. The state remains unchanged.
+   */
+  setActiveView(id: string): void {
+    const validated = ViewsStateSchema.parse({
+      ...this.getState(),
+      activeView: id,
+    });
+    this.setAppState(
+      produce<AppState>((state) => {
+        state.views.activeView = validated.activeView;
+      }),
+    );
+  }
 }

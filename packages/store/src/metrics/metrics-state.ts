@@ -17,14 +17,14 @@ import { MetricTypeSchema } from "./metrics-schema";
  * };
  */
 export const MetricsStateSchema = z.object({
-	activeMetric: MetricTypeSchema.nullable().default(null),
+  activeMetric: MetricTypeSchema.nullable().default(null),
 
-	selectedMetrics: z
-		.array(MetricTypeSchema)
-		.refine((metrics) => new Set(metrics).size === metrics.length, {
-			message: "Selected metrics must be unique",
-		}),
-	dirty: z.boolean().default(false),
+  selectedMetrics: z
+    .array(MetricTypeSchema)
+    .refine((metrics) => new Set(metrics).size === metrics.length, {
+      message: "Selected metrics must be unique",
+    }),
+  dirty: z.boolean().default(false),
 });
 
 export type MetricsState = z.infer<typeof MetricsStateSchema>;
@@ -33,7 +33,7 @@ export type MetricsState = z.infer<typeof MetricsStateSchema>;
  * Initial state for metrics.
  */
 export const initialMetricsState: MetricsState = {
-	activeMetric: null,
-	selectedMetrics: [],
-	dirty: false,
+  activeMetric: null,
+  selectedMetrics: [],
+  dirty: false,
 };

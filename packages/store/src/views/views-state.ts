@@ -13,8 +13,8 @@ import { DEFAULT_VIEW_ID } from "./views-schema";
  * };
  */
 export const ViewsStateSchema = z.object({
-	activeView: z.string().min(1),
-	dirty: z.boolean().default(false),
+  activeView: z.string().min(1),
+  dirty: z.boolean().default(false),
 });
 
 /**
@@ -26,6 +26,6 @@ export type ViewsState = z.infer<typeof ViewsStateSchema>;
  * Initial state with the built-in view active and no changes.
  */
 export const initialViewsState: ViewsState = {
-	activeView: DEFAULT_VIEW_ID,
-	dirty: false,
+  activeView: DEFAULT_VIEW_ID,
+  dirty: false,
 };

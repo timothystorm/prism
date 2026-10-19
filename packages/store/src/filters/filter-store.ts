@@ -11,8 +11,8 @@ import { FilterStateSchema } from "./filters-state";
  * An empty array clears the selection. Use getState()/setState() to read or replace the full slice,
  * including its controller-managed dirty flag.
  *
- * Filter actions preserve the dirty flag. Controllers manage dirty status, timezone conversion,
- * and date-boundary normalization; the store retains supplied UTC ISO date strings unchanged.
+ * Filter actions preserve the dirty flag. Controllers manage dirty status and query-specific
+ * interpretation of date ranges; the store retains supplied YYYY-MM-DD calendar dates unchanged.
  * Returned selections are store-owned snapshots and must not be mutated directly.
  *
  * @example
@@ -25,28 +25,28 @@ import { FilterStateSchema } from "./filters-state";
  * ```
  */
 export class FilterStore extends BaseStore<"filters"> {
-	protected readonly sliceKey = "filters";
-	protected readonly stateSchema = FilterStateSchema;
+  protected readonly sliceKey = "filters";
+  protected readonly stateSchema = FilterStateSchema;
 
-	/** @return The active filters in selection order, or an empty array if none are selected. */
-	getActiveFilters(): Filter[] {
-		return this.getState().activeFilters;
-	}
+  /** @return The active filters in selection order, or an empty array if none are selected. */
+  getActiveFilters(): Filter[] {
+    return this.getState().activeFilters;
+  }
 
-	/**
-	 * Validates and replaces the entire active-filter list without changing the dirty flag.
-	 * An empty array clears the selection. Parsing detaches input data and applies schema defaults.
-	 * Replacements create new references even when their contents are equal.
-	 *
-	 * @param filters The complete replacement list, with unique filter types.
-	 * @throws ZodError If the list is invalid. The state remains unchanged.
-	 */
-	setActiveFilters(filters: z.input<typeof FilterSchema>[]): void {
-		const validated = FilterStateSchema.shape.activeFilters.parse(filters);
-		this.setAppState(
-			produce<AppState>((state) => {
-				state.filters.activeFilters = validated;
-			}),
-		);
-	}
+  /**
+   * Validates and replaces the entire active-filter list without changing the dirty flag.
+   * An empty array clears the selection. Parsing detaches input data and applies schemas defaults.
+   * Replacements create new references even when their contents are equal.
+   *
+   * @param filters The complete replacement list, with unique filter types.
+   * @throws ZodError If the list is invalid. The state remains unchanged.
+   */
+  setActiveFilters(filters: z.input<typeof FilterSchema>[]): void {
+    const validated = FilterStateSchema.shape.activeFilters.parse(filters);
+    this.setAppState(
+      produce<AppState>((state) => {
+        state.filters.activeFilters = validated;
+      }),
+    );
+  }
 }

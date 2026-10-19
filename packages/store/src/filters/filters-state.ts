@@ -11,15 +11,15 @@ import { FilterSchema } from "./filters-schema";
  *     {
  *       type: "SHIPMENT:COMMIT_DATE",
  *       criteria: {
- *         start: "2023-01-01T00:00:00.000Z",
- *         end: "2023-01-31T23:59:59.999Z"
+ *         start: "2023-01-01",
+ *         end: "2023-01-31"
  *       }
  *     },
  *     {
  *       type: "SHIPMENT:DELIVERED_DATE",
  *       criteria: {
- *         start: "2023-02-01T00:00:00.000Z",
- *         end: "2023-02-28T23:59:59.999Z"
+ *         start: "2023-02-01",
+ *         end: "2023-02-28"
  *       }
  *     },
  *     {
@@ -31,19 +31,17 @@ import { FilterSchema } from "./filters-schema";
  * };
  */
 export const FilterStateSchema = z.object({
-	activeFilters: z
-		.array(FilterSchema)
-		.refine(
-			(filters) =>
-				new Set(filters.map((filter) => filter.type)).size === filters.length,
-			{ message: "Active filters must have unique filter types" },
-		),
-	dirty: z.boolean().default(false),
+  activeFilters: z
+    .array(FilterSchema)
+    .refine((filters) => new Set(filters.map((filter) => filter.type)).size === filters.length, {
+      message: "Active filters must have unique filter types",
+    }),
+  dirty: z.boolean().default(false),
 });
 
 export type FiltersState = z.infer<typeof FilterStateSchema>;
 
 export const initialFiltersState: FiltersState = {
-	activeFilters: [],
-	dirty: false,
+  activeFilters: [],
+  dirty: false,
 };

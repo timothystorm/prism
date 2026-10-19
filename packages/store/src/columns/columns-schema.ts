@@ -7,20 +7,20 @@ import { z } from "zod";
  * const columnName = ColumnNameSchema.parse("TRACKING_ID");
  */
 export const ColumnNameSchema = z.enum([
-	"TRACKING_ID",
-	"STATUS",
-	"EST_DELIVERY",
-	"ROUTE",
-	"DELIVERY_PREDICTION",
-	"TIME_IN_NETWORK",
+  "TRACKING_ID",
+  "STATUS",
+  "EST_DELIVERY",
+  "ROUTE",
+  "DELIVERY_PREDICTION",
+  "TIME_IN_NETWORK",
 ]);
 
 /**
  * Schema for a column with an optional sort direction.
  */
 export const ColumnSchema = z.object({
-	name: ColumnNameSchema,
-	sortDirection: z.enum(["asc", "desc"]).optional(),
+  name: ColumnNameSchema,
+  sortDirection: z.enum(["asc", "desc"]).optional(),
 });
 
 /**
@@ -35,21 +35,17 @@ export type Column = z.infer<typeof ColumnSchema>;
  * Schema for columns in display order. Column names must be unique, and TRACKING_ID is required.
  */
 export const ColumnsSchema = z
-	.array(ColumnSchema)
+  .array(ColumnSchema)
 
-	// Ensure that the 'TRACKING_ID' column is present in the array
-	.refine(
-		(columns) => columns.some((column) => column.name === "TRACKING_ID"),
-		{
-			error: "The 'TRACKING_ID' column is required",
-		},
-	)
+  // Ensure that the 'TRACKING_ID' column is present in the array
+  .refine((columns) => columns.some((column) => column.name === "TRACKING_ID"), {
+    error: "The 'TRACKING_ID' column is required",
+  })
 
-	// Ensure that all column names are unique
-	.refine(
-		(columns) => new Set(columns.map((c) => c.name)).size === columns.length,
-		{ error: "Columns must be unique" },
-	);
+  // Ensure that all column names are unique
+  .refine((columns) => new Set(columns.map((c) => c.name)).size === columns.length, {
+    error: "Columns must be unique",
+  });
 
 /**
  * Types for column selections.
