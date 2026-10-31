@@ -1,5 +1,5 @@
+import type { UserProvider } from "@fedex/prism-providers";
 import type { AppStore } from "@fedex/prism-store";
-import type { UserProvider } from "@fedex/prism-user";
 import type { CommandHandler } from "./handler/command-handler";
 import { SetActiveFiltersHandler } from "./handler/set-active-filters-handler";
 import { SetActiveMetricHandler } from "./handler/set-active-metric-handler";

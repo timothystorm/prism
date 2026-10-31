@@ -1,5 +1,5 @@
 {
-  "name": "@fedex/prism-user",
+  "name": "@fedex/prism-providers",
   "private": true,
   "version": "1.0.0",
   "description": "Prism providers and services for fetching and modifying data",

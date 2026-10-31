@@ -1,5 +1,5 @@
 import type { Filter } from "@fedex/prism-contracts";
-import { type Tier, Tiers, type UserProvider } from "@fedex/prism-user";
+import { type Tier, Tiers, type UserProvider } from "@fedex/prism-providers";
 
 /**
  * FilterPolicy class is responsible for determining if a user can use specific filters based on their tier. It provides
