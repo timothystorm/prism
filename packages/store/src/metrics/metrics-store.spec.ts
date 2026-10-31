@@ -1,8 +1,8 @@
+import type { MetricType } from "@fedex/prism-contracts";
 import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
-import type { MetricType } from "./metrics-schema";
 import { MetricsStore } from "./metrics-store";
 
 function createMetricsStore(

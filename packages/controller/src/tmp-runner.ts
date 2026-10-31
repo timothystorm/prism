@@ -47,7 +47,10 @@ await controller.dispatch({
   filters: [
     // allowed + disallowed filters
     { type: "SHIPMENT:COMMIT_DATE", criteria: { start: "2023-01-01", end: "2023-12-31" } },
-    { type: "SHIPMENT:EST_DELIVERY_DATE", criteria: { start: "2023-01-01", end: "2023-12-31" } },
+    {
+      type: "SHIPMENT:EST_DELIVERY_DATE_TIME",
+      criteria: { start: "2023-01-01T00:00:00Z", end: "2023-12-31T12:00:00Z" },
+    },
     { type: "SHIPMENT:GPS_DELIVERY_LOCATION", criteria: true },
   ],
 });

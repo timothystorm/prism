@@ -1,0 +1,35 @@
+{
+  "name": "@fedex/prism-contracts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Shared Prism query schemas and types",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "scripts": {
+    "build": "tsdown",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest --run",
+    "test:coverage": "vitest run --coverage",
+    "verify": "pnpm run check && pnpm run typecheck && pnpm run test",
+    "watch": "vitest --watch"
+  },
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.1"
+  }
+}

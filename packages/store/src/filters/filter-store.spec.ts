@@ -1,9 +1,9 @@
+import { type Filter, FilterSchema } from "@fedex/prism-contracts";
 import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
 import { FilterStore } from "../index";
-import { type Filter, FilterSchema } from "./filters-schema";
 
 function createFilterStore(activeFilters: Filter[] = [], dirty = false) {
   const store = createStore<AppState>(() => ({

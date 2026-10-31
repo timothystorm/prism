@@ -1,5 +1,5 @@
+import { FilterSchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { FilterSchema } from "./filters-schema";
 
 /**
  * Schema for active shipment filters with unique types and a controller-managed dirty flag.

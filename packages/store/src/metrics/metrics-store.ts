@@ -1,7 +1,7 @@
+import type { MetricType } from "@fedex/prism-contracts";
 import { produce } from "immer";
 import type { AppState } from "../app-state";
 import { BaseStore } from "../base-store";
-import type { MetricType } from "./metrics-schema";
 import { MetricsStateSchema } from "./metrics-state";
 
 /**

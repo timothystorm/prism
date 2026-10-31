@@ -1,9 +1,9 @@
+import { ParentStatusSchema, type Status, SubStatusSchema } from "@fedex/prism-contracts";
 import { describe, expect, expectTypeOf, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
 import { StatusesStore } from "../index";
-import { ParentStatusSchema, type Status, SubStatusSchema } from "./statuses-schema";
 
 function createStatusesStore() {
   const store = createStore<AppState>(() => ({ ...initialAppState }));

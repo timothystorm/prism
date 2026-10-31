@@ -38,3 +38,27 @@ test("dispatches date-only filter criteria without adding a time or timezone", a
     },
   ]);
 });
+
+test.each([
+  { tier: "BASIC", allowed: false },
+  { tier: "PREMIUM", allowed: true },
+] as const)(
+  "retains premium gating for combined estimated delivery with tier $tier",
+  async ({ tier, allowed }) => {
+    const store = new AppStore();
+    store.filters.setState({ activeFilters: [], dirty: true });
+    const userProvider = new UserProvider({
+      fetchAccounts: async () => [{ id: "account-1", accountTier: tier }],
+    });
+    const controller = new AppController(createDefaultCommandHandlers({ store, userProvider }));
+    const filter = {
+      type: "SHIPMENT:EST_DELIVERY_DATE_TIME" as const,
+      criteria: { start: "2026-10-31T00:00:00Z", end: "2026-10-31T12:00:00.000Z" },
+    };
+
+    await controller.dispatch({ type: "FILTERS:SET_ACTIVE", filters: [filter] });
+
+    expect(store.filters.getActiveFilters()).toEqual(allowed ? [filter] : []);
+    expect(store.filters.getState().dirty).toBe(true);
+  },
+);

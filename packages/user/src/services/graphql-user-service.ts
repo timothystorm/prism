@@ -1,4 +1,4 @@
-import type { Account } from "../schemas/user-schema";
+import type { Account } from "../schemas/account-schema";
 import type { UserService } from "./user-service";
 
 export class GraphqlUserService implements UserService {
@@ -17,7 +17,7 @@ export class GraphqlUserService implements UserService {
           },
           {
             id: "132690448",
-            accountTier: "PREMIUM",
+            accountTier: "BASIC",
           },
         ]);
       }, 400);

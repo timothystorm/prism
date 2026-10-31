@@ -1,5 +1,5 @@
+import { MetricTypeSchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { MetricTypeSchema } from "./metrics-schema";
 
 /**
  * Schema for the active metric and metrics selected for display in the current view.

@@ -1,8 +1,8 @@
+import type { Filter, FilterSchema } from "@fedex/prism-contracts";
 import { produce } from "immer";
 import type { z } from "zod";
 import type { AppState } from "../app-state";
 import { BaseStore } from "../base-store";
-import type { Filter, FilterSchema } from "./filters-schema";
 import { FilterStateSchema } from "./filters-state";
 
 /**

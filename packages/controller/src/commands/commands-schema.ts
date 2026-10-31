@@ -5,7 +5,7 @@ import {
   MetricTypeSchema,
   SearchSchema,
   StatusSchema,
-} from "@fedex/prism-store";
+} from "@fedex/prism-contracts";
 import { z } from "zod";
 
 export const SetActiveAccountsCommandSchema = z.object({

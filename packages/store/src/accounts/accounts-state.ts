@@ -1,5 +1,5 @@
+import { AccountsSchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { AccountsSchema } from "./accounts-schema";
 
 /**
  * Account identifiers currently selected to focus application filters and status.

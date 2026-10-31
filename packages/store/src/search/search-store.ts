@@ -1,7 +1,7 @@
+import { type Search, SearchSchema } from "@fedex/prism-contracts";
 import { produce } from "immer";
 import type { AppState } from "../app-state";
 import { BaseStore } from "../base-store";
-import { type Search, SearchSchema } from "./search-schema";
 import { SearchStateSchema } from "./search-state";
 
 /**
