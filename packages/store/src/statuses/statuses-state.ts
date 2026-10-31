@@ -1,5 +1,5 @@
+import { StatusSchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { StatusSchema } from "./statuses-schema";
 
 /**
  * Schema for shipment status selections. Each identifier is an independent OR term.

@@ -1,5 +1,5 @@
+import { ColumnsSchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { ColumnsSchema } from "./columns-schema";
 
 /**
  * Schema for active columns and a controller-managed dirty flag.

@@ -4,7 +4,6 @@ import { FilterSchema } from "./filters-schema";
 const dateTypes = [
   "SHIPMENT:COMMIT_DATE",
   "SHIPMENT:DELIVERED_DATE",
-  "SHIPMENT:EST_DELIVERY_DATE",
   "SHIPMENT:SHIP_DATE",
   "SHIPMENT:TENDERED_DATE",
 ] as const;
@@ -23,6 +22,40 @@ const stringArrayTypes = [
 ] as const;
 
 describe("FilterSchema", () => {
+  test("preserves the combined estimated-delivery UTC datetime range", () => {
+    const filter = {
+      type: "SHIPMENT:EST_DELIVERY_DATE_TIME",
+      criteria: { start: "2026-10-31T00:00:00Z", end: "2026-10-31T12:00:00.000Z" },
+    };
+
+    expect(FilterSchema.parse(filter)).toEqual(filter);
+  });
+
+  test.each([
+    { start: "2026-10-31", end: "2026-11-01" },
+    { start: "00:00", end: "12:00" },
+    { start: "2026-10-31T12:00:00Z", end: "2026-10-31T12:00:00.000Z" },
+    { start: "2026-10-31T12:00:00Z", end: "2026-10-31T00:00:00Z" },
+    { start: "2026-10-31T00:00:00-06:00", end: "2026-10-31T12:00:00-06:00" },
+  ])("rejects invalid combined estimated-delivery criteria: %j", (criteria) => {
+    expect(
+      FilterSchema.safeParse({ type: "SHIPMENT:EST_DELIVERY_DATE_TIME", criteria }).success,
+    ).toBe(false);
+  });
+
+  test.each([
+    {
+      type: "SHIPMENT:EST_DELIVERY_DATE",
+      criteria: { start: "2026-10-31", end: "2026-11-01" },
+    },
+    {
+      type: "SHIPMENT:EST_DELIVERY_TIME",
+      criteria: { start: "00:00", end: "12:00" },
+    },
+  ])("rejects the retired estimated-delivery filter $type", (filter) => {
+    expect(FilterSchema.safeParse(filter).success).toBe(false);
+  });
+
   test.each(dateTypes)("preserves supplied calendar dates for %s", (type) => {
     const filter = {
       type,

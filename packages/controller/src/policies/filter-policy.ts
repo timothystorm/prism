@@ -1,4 +1,4 @@
-import type { Filter } from "@fedex/prism-store";
+import type { Filter } from "@fedex/prism-contracts";
 import { type Tier, Tiers, type UserProvider } from "@fedex/prism-user";
 
 /**
@@ -52,8 +52,7 @@ export class FilterPolicy {
    */
   private requiredTier(type: Filter["type"]): Tier {
     switch (type) {
-      case "SHIPMENT:EST_DELIVERY_DATE":
-      case "SHIPMENT:EST_DELIVERY_TIME":
+      case "SHIPMENT:EST_DELIVERY_DATE_TIME":
         return "PREMIUM";
 
       default:

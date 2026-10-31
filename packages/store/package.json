@@ -1,10 +1,10 @@
 {
   "name": "@fedex/prism-store",
+  "private": true,
   "version": "1.0.0",
   "description": "Prism application store and state schemas",
   "keywords": [],
   "author": "Timothy Storm <timothystorm@gmail.com>",
-  "license": "UNLICENSED",
   "type": "module",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
@@ -20,6 +20,7 @@
     "watch": "vitest --watch"
   },
   "dependencies": {
+    "@fedex/prism-contracts": "workspace:*",
     "immer": "^11.1.21",
     "zod": "^4.6.7",
     "zustand": "^5.0.15"

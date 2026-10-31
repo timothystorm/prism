@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DateRangeSchema } from "../common/date-schema";
+import { DateRangeSchema, DateTimeRangeSchema } from "../common/date-schema";
 import { LocationCriterionSchema } from "../common/location-schema";
 import { TimeRangeSchema } from "../common/time-schema";
 
@@ -46,27 +46,20 @@ export const FilterSchema = z.discriminatedUnion("type", [
   /**
    * @example
    * {
-   *   "type": "SHIPMENT:EST_DELIVERY_DATE",
+   *   "type": "SHIPMENT:EST_DELIVERY_DATE_TIME",
    *   "criteria": {
-   *     "start": "2023-01-01",
-   *     "end": "2023-01-31"
+   *     "start": "2023-01-01T00:00:00Z",
+   *     "end": "2023-01-31T12:00:00.000Z"
    *   }
    * }
    */
   z
     .object({
-      type: z.literal("SHIPMENT:EST_DELIVERY_DATE"),
-      criteria: DateRangeSchema,
-    })
-    .describe("Estimated delivery calendar-date range for the shipment (YYYY-MM-DD)"),
-
-  z
-    .object({
-      type: z.literal("SHIPMENT:EST_DELIVERY_TIME"),
-      criteria: TimeRangeSchema,
+      type: z.literal("SHIPMENT:EST_DELIVERY_DATE_TIME"),
+      criteria: DateTimeRangeSchema,
     })
     .describe(
-      "Estimated delivery time range for the shipment in 24 hour clock time - ex. 08:00 to 17:00",
+      "Estimated delivery UTC datetime range (Z timestamps with seconds or millisecond precision)",
     ),
 
   /**

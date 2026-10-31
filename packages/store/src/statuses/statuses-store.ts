@@ -1,7 +1,7 @@
+import { type Status, StatusSchema } from "@fedex/prism-contracts";
 import { produce } from "immer";
 import type { AppState } from "../app-state";
 import { BaseStore } from "../base-store";
-import { type Status, StatusSchema } from "./statuses-schema";
 import { StatusesStateSchema } from "./statuses-state";
 
 /**

@@ -8,10 +8,3 @@ export const Tiers = ["UNKNOWN", "FREE", "BASIC", "PREMIUM", "PREMIER", "ELITE"]
 
 export const TierSchema = z.enum(Tiers);
 export type Tier = z.infer<typeof TierSchema>;
-
-export const AccountSchema = z.object({
-  id: z.string(),
-  accountTier: TierSchema,
-});
-
-export type Account = z.infer<typeof AccountSchema>;

@@ -1,5 +1,5 @@
+import { ParentStatusSchema, SubStatusSchema } from "@fedex/prism-contracts";
 import { describe, expect, test } from "vitest";
-import { ParentStatusSchema, SubStatusSchema } from "./statuses-schema";
 import { initialStatusesState, StatusesStateSchema } from "./statuses-state";
 
 describe("StatusesStateSchema", () => {

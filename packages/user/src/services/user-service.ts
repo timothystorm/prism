@@ -1,4 +1,4 @@
-import type { Account } from "../schemas/user-schema";
+import type { Account } from "../schemas/account-schema";
 
 export interface UserService {
   fetchAccounts(): Promise<Account[]>;

@@ -1,8 +1,8 @@
+import type { Column, Columns } from "@fedex/prism-contracts";
 import { describe, expect, test } from "vitest";
 import { ZodError } from "zod";
 import { createStore } from "zustand/vanilla";
 import { type AppState, initialAppState } from "../app-state";
-import type { Column, Columns } from "./columns-schema";
 import { ColumnsStore } from "./columns-store";
 
 function createColumnsStore() {

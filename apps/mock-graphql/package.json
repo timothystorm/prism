@@ -1,0 +1,23 @@
+{
+  "name": "mock-graphql",
+  "private": true,
+  "version": "1.0.0",
+  "description": "mock graphql server for testing",
+  "scripts": {
+    "dev": "tsx watch src/mock-server.ts",
+    "start": "tsx src/mock-server.ts"
+  },
+  "author": "Timothy Storm <timothystorm@gmail.com>",
+  "type": "module",
+  "dependencies": {
+    "@graphql-tools/mock": "10.0.0-alpha-20261017153408-5c280da98a0fd8acd4c58da44213fdb0fbc3d7d6",
+    "@graphql-tools/schema": "11.0.0-alpha-20261017153408-5c280da98a0fd8acd4c58da44213fdb0fbc3d7d6",
+    "graphql": "^17.0.2",
+    "graphql-yoga": "^5.24.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

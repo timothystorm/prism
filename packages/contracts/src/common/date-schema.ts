@@ -39,3 +39,24 @@ export const DateRangeSchema = z
 
 /** A validated calendar-date range, shared by store inputs and stored state. */
 export type DateRange = z.infer<typeof DateRangeSchema>;
+
+const UtcDateTimeSchema = z.union([
+  z.iso.datetime({ precision: 0 }),
+  z.iso.datetime({ precision: 3 }),
+]);
+
+/**
+ * Validates an ordered range of UTC timestamps ending in Z, with seconds or millisecond precision.
+ * Preserves input strings without timezone conversion; equal instants are not accepted.
+ */
+export const DateTimeRangeSchema = z
+  .object({
+    start: UtcDateTimeSchema,
+    end: UtcDateTimeSchema,
+  })
+  .refine(({ start, end }) => Date.parse(start) < Date.parse(end), {
+    error: "[start] datetime must be before [end] datetime",
+    path: ["end"],
+  });
+
+export type DateTimeRange = z.infer<typeof DateTimeRangeSchema>;

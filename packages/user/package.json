@@ -1,8 +1,8 @@
 {
   "name": "@fedex/prism-user",
+  "private": true,
   "version": "1.0.0",
   "description": "Prism providers and services for fetching and modifying data",
-  "license": "UNLICENSED",
   "type": "module",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",

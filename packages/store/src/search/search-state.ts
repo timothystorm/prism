@@ -1,5 +1,5 @@
+import { SearchCategorySchema } from "@fedex/prism-contracts";
 import { z } from "zod";
-import { SearchCategorySchema } from "./search-schema";
 
 /**
  * Schema for the current search selection and a controller-managed dirty flag.

@@ -1,0 +1,12 @@
+type Query {
+  shipments: [Shipment!]!
+  shipment(trackingNumber: String!): Shipment
+}
+
+type Shipment {
+  trackingNumber: String!
+  status: String!
+  origin: String
+  destination: String
+  estimatedDelivery: String
+}
