@@ -4,9 +4,19 @@ import { LocationCriterionSchema } from "../common/location-schema";
 import { TimeRangeSchema } from "../common/time-schema";
 
 /**
- * A schemas for shipment filters, which can be used to filter shipments based on various criteria such as dates,
- * locations, and other attributes. Each filter type has its own specific criteria, and the schemas uses a discriminated
- * union to differentiate between the different filter types.
+ * Validates one shipment filter, choosing the criteria schema by its `type` discriminator.
+ * This does not validate list uniqueness, enforce account tiers, or execute a shipment query;
+ * those responsibilities belong to state and controller consumers.
+ *
+ * Calendar-date filters, estimated-delivery UTC datetimes, and time-only ranges have
+ * distinct formats and ordering rules. Parsing preserves their original strings.
+ * GPS-location and signature-availability criteria default to false when omitted.
+ * `Filter` describes parsed output; use `z.input<typeof FilterSchema>` for input that
+ * may omit those defaulted criteria.
+ *
+ * @example
+ * const filter = FilterSchema.parse({ type: "SHIPMENT:SIGNATURE_AVAILABLE" });
+ * // filter.criteria is false.
  */
 export const FilterSchema = z.discriminatedUnion("type", [
   /**

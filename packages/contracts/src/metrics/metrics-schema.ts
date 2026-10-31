@@ -28,12 +28,15 @@ export const BuiltInMetricTypeSchema = z.enum([
 ]);
 /**
  * Schema for custom metric identifiers prefixed with CUSTOM:.
+ * The suffix is currently unconstrained, including an empty string. Validation does not
+ * establish that a corresponding metric definition exists.
  *
  * @example
  * const customMetric: MetricType = "CUSTOM:MY_CUSTOM_METRIC";
  */
 export const CustomMetricTypeSchema = z.templateLiteral(["CUSTOM:", z.string()]);
 
+/** Validates metric identifiers only, without loading or calculating their values. */
 export const MetricTypeSchema = z.union([BuiltInMetricTypeSchema, CustomMetricTypeSchema]);
 
 /**

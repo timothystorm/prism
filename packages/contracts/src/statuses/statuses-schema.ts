@@ -69,6 +69,7 @@ export const SubStatusSchema = z.enum([
 
 /**
  * Schema for an independently selectable parent or child shipment status.
+ * Parsing does not expand parents into children or collapse child selections into parents.
  *
  * @example
  * const parent: Status = "LABEL_CREATED";

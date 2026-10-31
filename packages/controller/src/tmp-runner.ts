@@ -1,5 +1,10 @@
 // biome-ignore-all lint: Temporary test script.
 
+/**
+ * @file One-shot store/controller wiring example, not a production application initializer.
+ * Uses the mock BASIC accounts, so the estimated-delivery datetime filter is omitted by policy.
+ * Subscriptions fire immediately and remain installed for this script's lifetime.
+ */
 import { GraphqlUserService, UserProvider } from "@fedex/prism-providers";
 import { AppStore } from "@fedex/prism-store";
 import { AppController } from "./app-controller";

@@ -12,7 +12,8 @@ import { FilterStateSchema } from "./filters-state";
  * including its controller-managed dirty flag.
  *
  * Filter actions preserve the dirty flag. Controllers manage dirty status and query-specific
- * interpretation of date ranges; the store retains supplied YYYY-MM-DD calendar dates unchanged.
+ * interpretation of temporal ranges. Calendar dates, UTC datetimes, and time-only criteria
+ * retain their supplied strings without conversion.
  * Returned selections are store-owned snapshots and must not be mutated directly.
  *
  * @example

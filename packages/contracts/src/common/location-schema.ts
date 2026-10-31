@@ -11,6 +11,10 @@ export const LocationAttributeTypeSchema = z.enum([
 export type LocationAttributeType = z.infer<typeof LocationAttributeTypeSchema>;
 
 /**
+ * One origin/destination attribute and its supplied text.
+ * Validates the attribute name, not the meaning of the value: no address validation,
+ * geocoding, or location normalization is performed, and empty strings are accepted.
+ *
  * @example
  * {
  *   "type": "CITY",

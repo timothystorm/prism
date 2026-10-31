@@ -1,3 +1,11 @@
+/**
+ * Application selection state and validated, immutable slice updates.
+ * Controllers own workflows and dirty-flag decisions; providers own account loading.
+ * Shared query contracts are re-exported for compatibility. New schema-only consumers
+ * should depend on @fedex/prism-contracts directly, not this state implementation.
+ *
+ * @packageDocumentation
+ */
 export {
   type Accounts,
   AccountsSchema,
