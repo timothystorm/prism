@@ -158,8 +158,9 @@ export class AppStore {
 
   /**
    * Provides the active tracking identifiers for the current view.
-   * Use getTrackIds() to read and setActiveTrackIds() to replace the selection.
-   * TrackId updates preserve dirty; controllers can toggle it through setState().
+   * Use getActiveTrackIds() to read and setActiveTrackIds() to replace the selection.
+   * This slice is an optional flat array, not a state object with a dirty flag.
+   * An empty array is an empty selection; undefined represents an absent selection.
    *
    * @example
    * ```typescript
@@ -234,8 +235,9 @@ export class AppStore {
    * Read selections with getActiveFilters(). Use setActiveFilters() to replace the ordered
    * list; an empty array clears it. Equal-content replacements still have new references
    * and notify subscribers selecting the list. Use setState() to replace the full slice.
-   * Filter-list updates preserve the slice's dirty flag. Date criteria remain YYYY-MM-DD
-   * calendar-date strings; the store does not add times or timezones.
+   * Filter-list updates preserve the slice's dirty flag. Temporal criteria retain their
+   * format: calendar dates, estimated-delivery UTC datetimes, or time-only strings.
+   * The store does not convert between formats or resolve timezones.
    *
    * @example
    * ```typescript

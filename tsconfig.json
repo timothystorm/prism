@@ -10,6 +10,7 @@
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
+    // Prefer development exports where provided; this does not enable Node runtime conditions.
     "customConditions": ["development"],
     "types": [],
     // For nodejs:

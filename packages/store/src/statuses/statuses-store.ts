@@ -17,6 +17,9 @@ export class StatusesStore extends BaseStore<"statuses"> {
   /**
    * Appends a valid status unless already selected, without changing the dirty flag.
    * Duplicate additions leave state and subscriptions unchanged.
+   *
+   * @returns The store-owned selection after the addition, not a defensive copy.
+   * @throws ZodError If the supplied status identifier is invalid. State remains unchanged.
    */
   addActiveStatuses(status: string): Status[] {
     const validated = StatusSchema.parse(status);

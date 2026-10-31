@@ -47,7 +47,22 @@ const UtcDateTimeSchema = z.union([
 
 /**
  * Validates an ordered range of UTC timestamps ending in Z, with seconds or millisecond precision.
- * Preserves input strings without timezone conversion; equal instants are not accepted.
+ * Both endpoints are required and must include seconds, optionally followed by exactly
+ * three fractional digits. Offsets (including +00:00), local timestamps, and Date objects
+ * are rejected. Callers must resolve local time and timezone context before parsing.
+ *
+ * Preserves input strings without normalization. Ordering compares instants, so equal
+ * timestamps with different supported precision are still rejected. Ordering errors
+ * point to `end`; the range may span days or years.
+ *
+ * @example
+ * const range = DateTimeRangeSchema.parse({
+ *   start: "2026-10-17T09:00:00Z",
+ *   end: "2026-10-18T17:30:00.000Z",
+ * });
+ *
+ * @throws {z.ZodError} When endpoints are invalid or start is not strictly before end.
+ * Use safeParse to receive a validation result instead.
  */
 export const DateTimeRangeSchema = z
   .object({
@@ -59,4 +74,5 @@ export const DateTimeRangeSchema = z
     path: ["end"],
   });
 
+/** A validated UTC range whose endpoints remain strings, not Date instances. */
 export type DateTimeRange = z.infer<typeof DateTimeRangeSchema>;

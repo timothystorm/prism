@@ -6,7 +6,8 @@ import { SetActiveMetricHandler } from "./handler/set-active-metric-handler";
 import { FilterPolicy } from "./policies/filter-policy";
 
 /**
- * Interface representing the dependencies required for creating default command handlers.
+ * Shared application-scope dependencies used by the built-in handlers.
+ * Use the same instances as the clients that should observe the resulting selections.
  */
 export interface DefaultCommandHandlerDependencies {
   store: AppStore;
@@ -14,10 +15,15 @@ export interface DefaultCommandHandlerDependencies {
 }
 
 /**
- * Creates an array of default command handlers with the provided dependencies.
+ * Creates handlers for FILTERS:SET_ACTIVE and METRICS:SET_ACTIVE only.
+ * This does not install handlers for every member of AppCommandSchema or load user data.
+ * Pass the result to AppController; account, status, column, and search commands need
+ * separately supplied handlers. This factory is not exported by the package root.
  *
- * @param dependencies - An object containing the required dependencies for the command handlers.
- * @returns An array of default command handlers.
+ * @example
+ * const handlers = createDefaultCommandHandlers({ store, userProvider });
+ * const controller = new AppController(handlers);
+ * await controller.dispatch({ type: "METRICS:SET_ACTIVE", metric: "EXCEPTION" });
  */
 export function createDefaultCommandHandlers(
   dependencies: DefaultCommandHandlerDependencies,

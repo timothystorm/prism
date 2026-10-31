@@ -3,8 +3,20 @@ import { type Tier, Tiers } from "../schemas/tier-schema";
 import type { UserService } from "../services/user-service";
 
 /**
- * UserProvider is responsible for managing user account data. It fetches the user's accounts from the UserService and
- * caches them for future use. It also provides methods to determine the highest tier among the user's accounts.
+ * Loads accounts through an injected service and caches them for this instance's lifetime.
+ * Share one instance within a user/session scope to reuse data and in-flight requests.
+ * There is no expiration or refresh API; create a new instance when the user changes
+ * or fresh account data is required. This cache is independent of selected accounts in AppStore.
+ *
+ * Service results are trusted, not validated or copied here. Implement validation at
+ * the service boundary and do not mutate the returned account objects or array.
+ *
+ * @example
+ * import { GraphqlUserService, UserProvider } from "@fedex/prism-providers";
+ *
+ * const provider = new UserProvider(new GraphqlUserService());
+ * const accounts = await provider.readAccounts();
+ * const tier = await provider.readUserTier(); // Reuses the loaded accounts.
  */
 export class UserProvider {
   private _accounts?: Account[] | undefined;
@@ -13,10 +25,11 @@ export class UserProvider {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * Fetches the user's accounts. If the accounts have already been fetched, it returns the cached accounts. If a fetch
-   * is already in progress, it returns the pending promise.
+   * Reuses cached accounts, including an empty result, or shares one underlying fetch
+   * with concurrent callers. A rejected fetch is not cached; the next read retries.
    *
-   * @returns A promise that resolves to an array of Account objects.
+   * @returns The cached account-array reference after a successful load.
+   * @throws Propagates service failures to all callers awaiting the fetch.
    */
   async readAccounts(): Promise<Account[]> {
     if (this._accounts) return this._accounts;
@@ -35,9 +48,10 @@ export class UserProvider {
   }
 
   /**
-   * Fetches the highest tier among the user's accounts.
+   * Reads the highest entitlement across all service-provided accounts, not just those selected in the UI.
+   * Uses the rank in Tiers; no accounts (or only UNKNOWN accounts) yields UNKNOWN.
    *
-   * @returns A promise that resolves to the highest Tier.
+   * @throws Propagates account-loading failures instead of treating them as an UNKNOWN tier.
    */
   async readUserTier(): Promise<Tier> {
     const accounts = await this.readAccounts();
@@ -45,11 +59,7 @@ export class UserProvider {
   }
 
   /**
-   * Determines the highest tier among a list of accounts. If there are no accounts, it returns "UNKNOWN".
-   *
-   * @param accounts - An array of Account objects.
-   * @returns The highest Tier among the accounts.
-   * @private
+   * Compares the declared entitlement ranks rather than sorting tier labels alphabetically.
    */
   private getHighestTier(accounts: Account[]): Tier {
     if (accounts.length === 0) return "UNKNOWN";

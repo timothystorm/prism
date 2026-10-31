@@ -33,6 +33,8 @@ export type Column = z.infer<typeof ColumnSchema>;
 
 /**
  * Schema for columns in display order. Column names must be unique, and TRACKING_ID is required.
+ * TRACKING_ID may appear at any position; parsing preserves the supplied display order.
+ * An empty array is invalid, so clearing all columns is not a supported selection.
  */
 export const ColumnsSchema = z
   .array(ColumnSchema)

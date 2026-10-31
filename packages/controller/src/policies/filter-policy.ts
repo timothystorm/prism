@@ -2,17 +2,18 @@ import type { Filter } from "@fedex/prism-contracts";
 import { type Tier, Tiers, type UserProvider } from "@fedex/prism-providers";
 
 /**
- * FilterPolicy class is responsible for determining if a user can use specific filters based on their tier. It provides
- * methods to check if a user can use a particular filter and to filter a list of filters based on the user's tier.
+ * Client-side filter eligibility based on the highest tier across the provider's accounts.
+ * Selected account IDs in AppStore do not affect this policy. UNKNOWN permits no filters;
+ * estimated-delivery datetimes require PREMIUM, and other types currently require BASIC.
+ * This client-side policy is not a substitute for backend authorization.
  */
 export class FilterPolicy {
   constructor(private readonly userProvider: UserProvider) {}
 
   /**
-   * Determines if the user can use a specific filter based on their tier.
+   * Checks one filter against the loaded user tier without modifying it or the store.
    *
-   * @param filter - The filter to be checked against the user's tier.
-   * @returns A promise that resolves to a boolean indicating if the user can use the filter.
+   * @throws Propagates user-account loading failures.
    */
   async canUse(filter: Filter): Promise<boolean> {
     const userTier = await this.userProvider.readUserTier();
@@ -23,10 +24,11 @@ export class FilterPolicy {
   }
 
   /**
-   * Filters the provided list of filters based on the user's tier.
+   * Reads the user's tier once and returns eligible entries in their original order.
+   * Returned entries retain their original references; input is not mutated or deduplicated.
+   * UNKNOWN yields an empty list rather than a permission error.
    *
-   * @param filters - An array of filters to be checked against the user's tier.
-   * @returns A promise that resolves to an array of filters that the user is allowed to use.
+   * @throws Propagates user-account loading failures, even for an empty input list.
    */
   async allowedFilters(filters: Filter[]): Promise<Filter[]> {
     const userTier = await this.userProvider.readUserTier();
@@ -34,21 +36,13 @@ export class FilterPolicy {
     return filters.filter((f) => this.meetsTier(userTier, this.requiredTier(f.type)));
   }
 
-  /**
-   * Determines if the actual tier meets or exceeds the required tier.
-   *
-   * @param actual - The actual tier of the user.
-   * @param required - The required tier to access the filter.
-   */
+  /** Compares entitlement ranks using the shared Tiers ordering. */
   private meetsTier(actual: Tier, required: Tier): boolean {
     return Tiers.indexOf(actual) >= Tiers.indexOf(required);
   }
 
   /**
-   * Determines the required tier for a given filter type.
-   *
-   * @param type - The type of the filter.
-   * @returns The required tier for the filter type.
+   * New filter types inherit the BASIC default unless explicitly assigned a higher tier here.
    */
   private requiredTier(type: Filter["type"]): Tier {
     switch (type) {

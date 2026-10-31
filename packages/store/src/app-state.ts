@@ -10,7 +10,10 @@ import { initialTrackIds, TrackIdsSchema } from "./track-ids/track-ids-schema";
 import { initialViewsState, ViewsStateSchema } from "./views/views-state";
 
 /**
- * Schema for the entire application state.
+ * Validates a complete application selection snapshot, composing slice-specific invariants.
+ * Defaults belong to each slice schema; this does not merge missing slices with initialAppState.
+ * Tracking IDs are an optional flat array, unlike the other slices' state objects, and
+ * have no dirty flag. Loaded accounts and metric result values are not stored here.
  */
 export const AppStateSchema = z.object({
   account: AccountsStateSchema,
@@ -29,7 +32,8 @@ export const AppStateSchema = z.object({
 export type AppState = z.infer<typeof AppStateSchema>;
 
 /**
- * Initial state for the entire application.
+ * Shared seed values for new application stores. Treat this object and its nested values
+ * as read-only; update live selections through AppStore rather than mutating this seed.
  */
 export const initialAppState: AppState = {
   account: initialAccountsState,
