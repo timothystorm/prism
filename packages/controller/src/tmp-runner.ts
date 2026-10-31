@@ -1,7 +1,7 @@
 // biome-ignore-all lint: Temporary test script.
 
+import { GraphqlUserService, UserProvider } from "@fedex/prism-providers";
 import { AppStore } from "@fedex/prism-store";
-import { GraphqlUserService, UserProvider } from "@fedex/prism-user";
 import { AppController } from "./app-controller";
 import { createDefaultCommandHandlers } from "./default-command-handlers";
 

@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@fedex/prism-contracts": "workspace:*",
+    "@fedex/prism-providers": "workspace:*",
     "@fedex/prism-store": "workspace:*",
-    "@fedex/prism-user": "workspace:*",
     "zod": "^4.6.7"
   },
   "devDependencies": {

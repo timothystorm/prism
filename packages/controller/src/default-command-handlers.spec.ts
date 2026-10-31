@@ -1,5 +1,5 @@
+import { UserProvider } from "@fedex/prism-providers";
 import { AppStore } from "@fedex/prism-store";
-import { UserProvider } from "@fedex/prism-user";
 import { expect, test } from "vitest";
 import { AppController } from "./app-controller";
 import { createDefaultCommandHandlers } from "./default-command-handlers";

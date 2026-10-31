@@ -222,12 +222,22 @@ importers:
       '@fedex/prism-contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@fedex/prism-providers':
+        specifier: workspace:*
+        version: link:../providers
       '@fedex/prism-store':
         specifier: workspace:*
         version: link:../store
-      '@fedex/prism-user':
-        specifier: workspace:*
-        version: link:../user
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      tsdown:
+        specifier: ^0.23.1
+        version: 0.23.1(tsx@4.23.15)(typescript@6.0.3)
+
+  packages/providers:
+    dependencies:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -250,16 +260,6 @@ importers:
       zustand:
         specifier: ^5.0.15
         version: 5.0.15(immer@11.1.21)
-    devDependencies:
-      tsdown:
-        specifier: ^0.23.1
-        version: 0.23.1(tsx@4.23.15)(typescript@6.0.3)
-
-  packages/user:
-    dependencies:
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
     devDependencies:
       tsdown:
         specifier: ^0.23.1
